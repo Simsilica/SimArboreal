@@ -59,7 +59,8 @@ public class TreeParameters implements Iterable<BranchParameters> {
     private float rootHeight = 1 * 0.3f;
     private int uRepeat = 4;
     private float vScale = 0.45f;
-    private float leafScale = 1; 
+    private float leafScale = 1;
+    private boolean generateLeaves = false; 
     private int seed = 0;
     
     public TreeParameters() {
@@ -73,6 +74,11 @@ public class TreeParameters implements Iterable<BranchParameters> {
             
             // for testing
             //branches[i].enabled = false;
+            
+            // For any branch greater than depth 3, we disable it by default
+            if( i > 3 ) {
+                branches[i].enabled = false;
+            }            
         }
         this.branches[0].inherit = false;                    
         //this.branches[0].enabled = true;                    
@@ -102,6 +108,22 @@ public class TreeParameters implements Iterable<BranchParameters> {
         
         roots[2].enabled = true;                    
                            
+    }
+ 
+    public void setSeed( int seed ) {
+        this.seed = seed;
+    }
+    
+    public int getSeed() {
+        return seed;
+    }
+ 
+    public void setGenerateLeaves( boolean b ) {
+        this.generateLeaves = b;
+    }
+    
+    public boolean getGenerateLeaves() {
+        return generateLeaves;
     }
  
     public void setBaseScale( float f ) {
