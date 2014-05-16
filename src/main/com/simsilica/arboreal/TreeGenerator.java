@@ -1,5 +1,5 @@
 /*
- * ${Id}
+ * $Id$
  *
  * Copyright (c) 2014, Simsilica, LLC
  * All rights reserved.
@@ -308,7 +308,8 @@ public class TreeGenerator {
             tip.children[b] = createBranch(random, depth+1, bParms, 
                                            branchRotation, branchRadius,
                                            branchLength, 0, 0,
-                                           vBase, uRepeat, vScaleTree);              
+                                           vBase, uRepeat, vScaleTree);
+            tip.children[b].parentConnection = ConnectionType.Curve;                                                                
         }         
  
         // Add the tip recursion
@@ -318,6 +319,7 @@ public class TreeGenerator {
                                                               rotation, radius, length * parms.taper,
                                                               0, baseAngle + parms.twist + parms.tipRotation,
                                                               vBase, uRepeat, vScaleTree); 
+            tip.children[parms.sideJointCount].parentConnection = ConnectionType.Curve;                                                                
         }
                                                         
         return result;                                    

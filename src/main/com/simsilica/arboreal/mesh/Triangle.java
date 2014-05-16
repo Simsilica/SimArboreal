@@ -36,54 +36,66 @@
 
 package com.simsilica.arboreal.mesh;
 
+
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Mesh;
-import com.jme3.scene.VertexBuffer;
-import com.jme3.util.BufferUtils;
-import com.simsilica.arboreal.Segment;
-import com.simsilica.arboreal.Tree;
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
- *  Simple tree mesh generator that simply generates lines for
- *  the branches.
  *
  *  @author    Paul Speed
  */
-public class LineMeshGenerator {
-
-    public Mesh generateMesh( Tree tree ) {
+public class Triangle {
+    public final Vertex v1;
+    public final Vertex v2;
+    public final Vertex v3;
     
-        List<Vector3f> points = new ArrayList<Vector3f>();
+    public Triangle() {
+        this(new Vertex(), new Vertex(), new Vertex());
+    }
+    
+    public Triangle( Vertex v1, Vertex v2, Vertex v3 ) {
+        this.v1 = v1;
+        this.v2 = v2;
+        this.v3 = v3;
+        v1.usageCount++;
+        v2.usageCount++;
+        v3.usageCount++;
+    }
  
-        Vector3f base = new Vector3f();
-        for( Segment seg : tree ) {
-            if( seg == null ) {
-                continue;
-            }       
-            addBranches(base, seg, points);
-        }
-        
-        Mesh mesh = new Mesh();           
-        mesh.setMode(Mesh.Mode.Lines);
-        FloatBuffer fb = BufferUtils.createFloatBuffer(points.toArray(new Vector3f[0]));
-        mesh.setBuffer(VertexBuffer.Type.Position, 3, fb);
-        mesh.updateBound();
-
-        return mesh;                
+    public Vertex[] vertexes() {
+        return new Vertex[] { v1, v2, v3 };
     }
     
-    protected void addBranches( Vector3f start, Segment seg, List<Vector3f> points ) {
-        
-        points.add(start);
-        Vector3f end = start.add(seg.dir.mult(seg.length));
-        points.add(end);
-        
-        for( Segment child : seg ) {
-            addBranches(end, child, points);
-        }
+    public Vector3f calculateNormal() {        
+        Vector3f edge1 = v2.pos.subtract(v1.pos);
+        Vector3f edge2 = v3.pos.subtract(v1.pos);
+        return edge1.cross(edge2).normalizeLocal();       
     }
+    
+    /**
+     *  Returns the angle in radians at this triangles specified 
+     *  corner.
+     */        
+    public float angle( Vertex corner ) {
+    
+        Vertex a;
+        Vertex b;
+        if( v1 == corner ) {
+            a = v2;
+            b = v3;
+        } else if( v2 == corner ) {
+            a = v3;
+            b = v1;
+        } else if( v3 == corner ) {
+            a = v1; 
+            b = v2;
+        } else {
+            throw new IllegalArgumentException("Corner is not part of this triangle");
+        }       
+
+        Vector3f edge1 = a.pos.subtract(corner.pos).normalizeLocal();
+        Vector3f edge2 = b.pos.subtract(corner.pos).normalizeLocal();
+        float result = edge1.angleBetween(edge2);
+        return result; 
+    }    
 }
