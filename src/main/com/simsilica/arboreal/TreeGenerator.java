@@ -236,7 +236,6 @@ public class TreeGenerator {
                     // tend to go in the original direction.    
                     Quaternion rot = new Quaternion().fromAngles(y, x, 0);
                     rotation = originalRotation.mult(rot);
-                    tip.dir.set(rotation.mult(Vector3f.UNIT_Z));
                 }
                 
                 // So now extend the previous segment
@@ -245,6 +244,7 @@ public class TreeGenerator {
                 tip.length = lengthPart;
                 tip.radials = parms.radialSegments;
                 tip.twist = twistPart;
+                tip.dir.set(rotation.mult(Vector3f.UNIT_Z));
                 
                 // If there will be more parts then we get a new tip
                 if( i + 1 < parms.lengthSegments ) {
@@ -263,6 +263,9 @@ public class TreeGenerator {
         // Add the child branches
         //-----------------------------------------
  
+        // Apply the taper to the final radius
+        radius = radius * effectiveTaper;        
+ 
         // A slightly questionable policy... remove any randomization
         // for the branch joints.  This also keeps trees from leaning 
         // strangely thought it's possible that other angleLimiting
@@ -273,7 +276,7 @@ public class TreeGenerator {
         
         // Bring vBase up to speed
         vBase += effectiveLength * vScale;
-        
+         
         // Grab inclination and put it in an appropriate form.
         // "inclination" is inverted from what we need as
         // tilteAngle will be relative to branch direction and

@@ -70,6 +70,10 @@ public class Segment implements Iterable<Segment> {
         this.children = new Segment[childCount];
     }
  
+    public boolean isInverted() {
+        return vStart > vEnd;
+    }
+ 
     public Segment extend( ConnectionType connectionType, boolean asOnlyChild ) {
         Segment result = new Segment();
         result.parentConnection = connectionType;
