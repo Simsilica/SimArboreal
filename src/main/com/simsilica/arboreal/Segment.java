@@ -74,6 +74,10 @@ public class Segment implements Iterable<Segment> {
         return vStart > vEnd;
     }
  
+    public boolean hasChildren() {
+        return children != null && children.length > 0;
+    }
+ 
     public Segment extend( ConnectionType connectionType, boolean asOnlyChild ) {
         Segment result = new Segment();
         result.parentConnection = connectionType;
