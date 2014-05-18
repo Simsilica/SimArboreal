@@ -271,11 +271,14 @@ public class TreeParameters implements Iterable<BranchParameters> {
                 PropertyDescriptor pd = findProperty(info, e.getKey());
                 Method m = pd.getWriteMethod();                
                 try {
-                    Number value = (Number)e.getValue();
                     if( pd.getPropertyType() == Integer.TYPE ) {
+                        Number value = (Number)e.getValue();
                         m.invoke(this, value.intValue());
                     } else if( pd.getPropertyType() == Float.TYPE ) {
+                        Number value = (Number)e.getValue();
                         m.invoke(this, value.floatValue());
+                    } else if( pd.getPropertyType() == Boolean.TYPE ) {
+                        m.invoke(this, e.getValue());
                     } else {
                         throw new RuntimeException("Unhandled property type:" + pd.getPropertyType());
                     }
