@@ -55,7 +55,7 @@ import java.util.List;
  */
 public class SkinnedTreeMeshGenerator {
 
-    public Mesh generateMesh( Tree tree, float yOffset, int uRepeat, float vScale ) {
+    public Mesh generateMesh( Tree tree, float yOffset, int uRepeat, float vScale, List<Vertex> tips ) {
  
         MeshBuilder mb = new MeshBuilder();
  
@@ -82,9 +82,9 @@ public class SkinnedTreeMeshGenerator {
                 if( invertedLoop == null ) {
                     invertedLoop = invertLoop(baseLoop);
                 }
-                addBranches(invertedLoop, seg, 0, -uRepeat, -vScale, mb);
+                addBranches(invertedLoop, seg, 0, -uRepeat, -vScale, mb, null);
             } else {
-                addBranches(baseLoop, seg, 0, uRepeat, vScale, mb);
+                addBranches(baseLoop, seg, 0, uRepeat, vScale, mb, tips);
             }
         }
  
@@ -95,7 +95,7 @@ public class SkinnedTreeMeshGenerator {
     
     protected void addBranches( List<Vertex> base, Segment seg, 
                                 float vBase, int uRepeat, float vScale, 
-                                MeshBuilder mb ) {
+                                MeshBuilder mb, List<Vertex> tips ) {
  
         // Base the 'v' scale on what the 'u' will do as the tree expands
         // but the length doesn't.  ie: a ratio of length to radius.
@@ -109,18 +109,40 @@ public class SkinnedTreeMeshGenerator {
         mb.textureLoop(tip, new Vector2f(0, vBase), new Vector2f(uRepeat, 0));
         applyTangents(tip, seg.isInverted());
 
+        if( !seg.hasChildren() ) {
+            // Then cap it off by closing the loop.
+ 
+            tip = mb.extrude(tip, seg.dir, 0, Vector3f.ZERO, 3, 0.001f, 0);
+            mb.textureLoop(tip, new Vector2f(0, vBase + vScaleLocal), new Vector2f(uRepeat, 0));            
+            applyTangents(tip, seg.isInverted());
+            
+            for( Vertex v : tip ) {
+                v.group = 1;
+            }
+            
+            // Find the center to add to the branch tips
+            Vector3f centerPos = mb.findCenter(base);
+            Vertex tipCenter = new Vertex(centerPos);
+            tipCenter.normal = seg.dir;
+
+            if( tips != null ) {
+                tips.add(tipCenter);
+            }            
+            
+            return;
+        }
+
         // And the follow on segments
         for( Segment child : seg ) {
             switch( child.parentConnection ) {
                 case Extrude:
                     // We can just continue directly
-                    addBranches(tip, child, vBase, uRepeat, vScale, mb);
+                    addBranches(tip, child, vBase, uRepeat, vScale, mb, tips);
                     break;
                 case Abut:
                     throw new UnsupportedOperationException("Abutment not yet supported.");
                 case Curve:
- 
-               
+                
                     // This is the trickier one.
                     // We want a smooth transition from one direction to
                     // another, to include transition for any radius 
@@ -141,7 +163,6 @@ public class SkinnedTreeMeshGenerator {
                     float radiusGapStep = radiusGap / corners;
                     float minSlope = 5; // 5:1
                     float minDist = minSlope * radiusGapStep * dot; // dot is same as FastMath.cos(tiltAngle);
-
                     float vNextScale = vScale / child.startRadius;
                     float angleDelta = tiltAngle / corners;
                     float radiusPart = (seg.endRadius - child.startRadius) / corners;
@@ -162,10 +183,9 @@ public class SkinnedTreeMeshGenerator {
                     float v = vBase; 
                     for( int i = 0; i < corners; i++ ) {
                         float a = (i + 1) * angleDelta;
-                        float r = seg.endRadius - radiusPart * i;
+                        float r = seg.endRadius - (radiusPart * (i+1));
                         float dist = seg.endRadius * FastMath.sin(angleDelta) * 1.4f; // magic number
                         dist = Math.max(dist, minDist);
-                        
                         Vector3f dir;
                         if( q1 == null ) {
                             dir = child.dir;
@@ -180,7 +200,7 @@ public class SkinnedTreeMeshGenerator {
                         applyTangents(newTip, child.isInverted());                           
                     }                   
  
-                    addBranches(newTip, child, v, uRepeat, vScale, mb);
+                    addBranches(newTip, child, v, uRepeat, vScale, mb, tips);
                 
                     break;
             }
