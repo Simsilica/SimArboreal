@@ -55,6 +55,7 @@ public class TreeParameters implements Iterable<BranchParameters> {
 
     private BranchParameters[] branches;
     private BranchParameters[] roots;
+    private LevelOfDetailParameters[] lodLevels;
     private float baseScale = 1;
     private float trunkRadius = 0.5f * 0.3f;
     private float trunkHeight = 6 * 0.3f;
@@ -109,7 +110,12 @@ public class TreeParameters implements Iterable<BranchParameters> {
         roots[1].enabled = true;
         
         roots[2].enabled = true;                    
-                           
+ 
+ 
+        this.lodLevels = new LevelOfDetailParameters[4];
+        for( int i = 0; i < lodLevels.length; i++ ) {
+            lodLevels[i] = new LevelOfDetailParameters();
+        }                           
     }
  
     public void setSeed( int seed ) {
@@ -219,6 +225,18 @@ public class TreeParameters implements Iterable<BranchParameters> {
     
     public Iterator<BranchParameters> rootIterator() {
         return new RootIterator();
+    }
+ 
+    public int getLodCount() {
+        return lodLevels.length; 
+    }
+    
+    public LevelOfDetailParameters getLod( int i ) {
+        return lodLevels[i];
+    }
+    
+    public List<LevelOfDetailParameters> getLods() {
+        return Arrays.asList(lodLevels);       
     }
  
     private PropertyDescriptor findProperty( BeanInfo info, String name ) {

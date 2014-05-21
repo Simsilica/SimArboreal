@@ -41,6 +41,7 @@ import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
+import com.simsilica.arboreal.LevelOfDetailParameters;
 import com.simsilica.arboreal.Segment;
 import com.simsilica.arboreal.Tree;
 import java.util.ArrayList;
@@ -55,7 +56,7 @@ import java.util.List;
  */
 public class SkinnedTreeMeshGenerator {
 
-    public Mesh generateMesh( Tree tree, float yOffset, int uRepeat, float vScale, List<Vertex> tips ) {
+    public Mesh generateMesh( Tree tree, LevelOfDetailParameters lod, float yOffset, int uRepeat, float vScale, List<Vertex> tips ) {
  
         MeshBuilder mb = new MeshBuilder();
  
@@ -65,8 +66,10 @@ public class SkinnedTreeMeshGenerator {
         
         Vector3f center = new Vector3f(0, yOffset, 0);
 
+        int effectiveRadials = Math.min(trunk.radials, lod.maxRadialSegments);
+
         Quaternion up = new Quaternion().fromAngles(-FastMath.HALF_PI, 0, 0);
-        List<Vertex> baseLoop = mb.createLoop(center, up, trunk.startRadius, trunk.radials, 0, 0);
+        List<Vertex> baseLoop = mb.createLoop(center, up, trunk.startRadius, effectiveRadials, 0, 0);
         List<Vertex> invertedLoop = null;
 
         mb.textureLoop(baseLoop, new Vector2f(0,0), new Vector2f(uRepeat, 0));        
@@ -82,9 +85,9 @@ public class SkinnedTreeMeshGenerator {
                 if( invertedLoop == null ) {
                     invertedLoop = invertLoop(baseLoop);
                 }
-                addBranches(invertedLoop, seg, 0, -uRepeat, -vScale, mb, null);
+                addBranches(invertedLoop, seg, 0, -uRepeat, -vScale, lod, 0, mb, null);
             } else {
-                addBranches(baseLoop, seg, 0, uRepeat, vScale, mb, tips);
+                addBranches(baseLoop, seg, 0, uRepeat, vScale, lod, 0, mb, tips);
             }
         }
  
@@ -92,38 +95,90 @@ public class SkinnedTreeMeshGenerator {
         
         return mb.build();
     }
-    
+ 
+    protected boolean renderDepth( int depth, boolean inverted, LevelOfDetailParameters lod ) {    
+        if( inverted && depth < lod.rootDepth ) {
+            return true;
+        } else if( !inverted && depth < lod.branchDepth ) {
+            return true;
+        } else {
+            return false;
+        }
+    } 
+
+    protected Vertex addCap( List<Vertex> loop, Segment seg, float vBase, int uRepeat, float vScaleLocal,
+                             MeshBuilder mb ) {
+        
+        List<Vertex> tip = mb.extrude(loop, seg.dir, 0, Vector3f.ZERO, 3, 0.001f, 0);
+        mb.textureLoop(tip, new Vector2f(0, vBase + vScaleLocal), new Vector2f(uRepeat, 0));            
+        applyTangents(tip, seg.isInverted());
+                
+        for( Vertex v : tip ) {
+            v.group = 1;
+        }            
+            
+        // Find the center to add to the branch tips
+        Vector3f centerPos = mb.findCenter(tip);
+        Vertex tipCenter = new Vertex(centerPos);
+        tipCenter.normal = seg.dir;
+        
+        return tipCenter;
+    } 
+ 
     protected void addBranches( List<Vertex> base, Segment seg, 
-                                float vBase, int uRepeat, float vScale, 
+                                float vBase, int uRepeat, float vScale,
+                                LevelOfDetailParameters lod, int depth,  
                                 MeshBuilder mb, List<Vertex> tips ) {
  
         // Base the 'v' scale on what the 'u' will do as the tree expands
         // but the length doesn't.  ie: a ratio of length to radius.
         float vScaleLocal = vScale * (1 / seg.endRadius); 
 
-        List<Vertex> tip = mb.extrude(base, seg.dir, seg.length, seg.radials, 
-                                      seg.endRadius, seg.twist);       
+        int effectiveRadials = Math.min(seg.radials, lod.maxRadialSegments);
 
-        vBase += seg.length * vScaleLocal;
+        boolean renderDepth = renderDepth(depth, seg.isInverted(), lod);
         
-        mb.textureLoop(tip, new Vector2f(0, vBase), new Vector2f(uRepeat, 0));
-        applyTangents(tip, seg.isInverted());
+        List<Vertex> tip = base;                
+        if( renderDepth ) {
+            tip = mb.extrude(tip, seg.dir, seg.length, effectiveRadials, 
+                             seg.endRadius, seg.twist);       
+
+            vBase += seg.length * vScaleLocal;
+        
+            mb.textureLoop(tip, new Vector2f(0, vBase), new Vector2f(uRepeat, 0));
+            applyTangents(tip, seg.isInverted());
+        } else {
+            // We still need to pass along the tip and/or cap off the end
+            Vertex tipCenter;            
+            if( tip.size() > 1 ) {
+                // Cap it off
+                tipCenter = addCap(tip, seg, vBase, uRepeat, vScaleLocal, mb);
+                tip = new ArrayList<Vertex>();
+                tip.add(tipCenter);            
+            } else if( tip.size() == 1 ) {
+                tipCenter = tip.get(0);
+            } else {
+                throw new IllegalStateException("Tip state not properly passed through");
+            }
+ 
+            // Extend the tip even though we don't render it.  We will
+            // need the tips for the leaves.
+            tipCenter.pos.addLocal(seg.dir.mult(seg.length));
+            tipCenter.normal = seg.dir;            
+            vBase += seg.length * vScaleLocal;
+        }                   
 
         if( !seg.hasChildren() ) {
             // Then cap it off by closing the loop.
- 
-            tip = mb.extrude(tip, seg.dir, 0, Vector3f.ZERO, 3, 0.001f, 0);
-            mb.textureLoop(tip, new Vector2f(0, vBase + vScaleLocal), new Vector2f(uRepeat, 0));            
-            applyTangents(tip, seg.isInverted());
-            
-            for( Vertex v : tip ) {
-                v.group = 1;
+            Vertex tipCenter;
+            if( renderDepth ) {
+                tipCenter = addCap(tip, seg, vBase, uRepeat, vScaleLocal, mb);
+            } else {
+                if( tip.size() > 1 ) {
+                    throw new IllegalStateException("Tip state not properly passed through");
+                }
+                tipCenter = tip.get(0);
             }
-            
-            // Find the center to add to the branch tips
-            Vector3f centerPos = mb.findCenter(base);
-            Vertex tipCenter = new Vertex(centerPos);
-            tipCenter.normal = seg.dir;
 
             if( tips != null ) {
                 tips.add(tipCenter);
@@ -132,17 +187,23 @@ public class SkinnedTreeMeshGenerator {
             return;
         }
 
+        boolean renderNextDepth = renderDepth;
+        boolean capped = tip.size() == 1;
+        if( !renderDepth(depth + 1, seg.isInverted(), lod) ) {
+            renderNextDepth = false;             
+        }                    
+
         // And the follow on segments
         for( Segment child : seg ) {
             switch( child.parentConnection ) {
                 case Extrude:
                     // We can just continue directly
-                    addBranches(tip, child, vBase, uRepeat, vScale, mb, tips);
+                    addBranches(tip, child, vBase, uRepeat, vScale, lod, depth, mb, tips);
                     break;
                 case Abut:
                     throw new UnsupportedOperationException("Abutment not yet supported.");
                 case Curve:
-                
+ 
                     // This is the trickier one.
                     // We want a smooth transition from one direction to
                     // another, to include transition for any radius 
@@ -180,6 +241,25 @@ public class SkinnedTreeMeshGenerator {
                     } 
  
                     List<Vertex> newTip = tip;
+                    
+                    if( !renderNextDepth ) {
+                        if( !capped ) {
+                            // Cap the previous level off... but only the first time we need to
+                            capped = true;
+                            Vertex tipCenter = addCap(tip, seg, vBase, uRepeat, vScaleLocal, mb);
+                            tip = new ArrayList<Vertex>();
+                            tip.add(tipCenter);
+                        } else if( newTip.size() != 1 ) {
+                            // check should be unnecessary
+                            throw new IllegalStateException("Tip state not properly passed through");
+                        }
+                         
+                        // Make sure this branch has its own tip to move
+                        Vertex tipCenter = newTip.get(0).clone();
+                        newTip = new ArrayList<Vertex>();
+                        newTip.add(tipCenter);
+                    }
+                    
                     float v = vBase; 
                     for( int i = 0; i < corners; i++ ) {
                         float a = (i + 1) * angleDelta;
@@ -194,13 +274,24 @@ public class SkinnedTreeMeshGenerator {
                             dir = q.mult(Vector3f.UNIT_Z);
                         }
  
-                        newTip = mb.extrude(newTip, dir, dist, seg.radials, r, 0);
                         v += dist * (vScaleLocal - (vScalePart * (i+1)));
-                        mb.textureLoop(newTip, new Vector2f(0, v), new Vector2f(uRepeat, 0));
-                        applyTangents(newTip, child.isInverted());                           
+                        
+                        if( renderNextDepth ) {
+                            newTip = mb.extrude(newTip, dir, dist, effectiveRadials, r, 0);
+                            mb.textureLoop(newTip, new Vector2f(0, v), new Vector2f(uRepeat, 0));
+                            applyTangents(newTip, child.isInverted());
+                        } else {
+                            if( newTip.size() != 1 ) {
+                                throw new IllegalStateException("Tip state not properly passed through");
+                            }
+                            // Extend the tip
+                            Vertex tipCenter = newTip.get(0);
+                            tipCenter.pos.addLocal(dir.mult(dist));                            
+                            tipCenter.normal = dir;
+                        }                           
                     }                   
  
-                    addBranches(newTip, child, v, uRepeat, vScale, mb, tips);
+                    addBranches(newTip, child, v, uRepeat, vScale, lod, depth + 1, mb, tips);
                 
                     break;
             }

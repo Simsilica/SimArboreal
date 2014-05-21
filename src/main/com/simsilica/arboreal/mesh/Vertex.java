@@ -46,7 +46,7 @@ import com.jme3.math.Vector3f;
  *
  *  @author    Paul Speed
  */
-public class Vertex {
+public class Vertex implements Cloneable {
     public Vector3f pos = new Vector3f();
     public Vector3f normal;
     public Vector3f tangent;
@@ -74,6 +74,26 @@ public class Vertex {
     
     public Vertex( Vector3f v ) {
         this.pos.set(v); 
+    }
+ 
+    @Override
+    public Vertex clone() {
+        try {
+            Vertex result = (Vertex)super.clone();
+            result.pos = pos.clone();
+            if( normal != null ) {
+                result.normal = normal.clone();
+            }
+            if( tangent != null ) {
+                result.tangent = tangent.clone();
+            }
+            if( uv != null ) {
+                result.uv = uv.clone();
+            }            
+            return result;
+        } catch( CloneNotSupportedException e ) {
+            throw new RuntimeException("Lame", e);
+        }
     }
     
     public boolean isSame( Vector3f v, float epsilon ) {
