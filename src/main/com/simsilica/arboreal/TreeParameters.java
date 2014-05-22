@@ -60,6 +60,7 @@ public class TreeParameters implements Iterable<BranchParameters> {
     private float trunkRadius = 0.5f * 0.3f;
     private float trunkHeight = 6 * 0.3f;
     private float rootHeight = 1 * 0.3f;
+    private float yOffset = 1 * 0.3f;
     private int uRepeat = 4;
     private float vScale = 0.45f;
     private float leafScale = 1;
@@ -165,6 +166,14 @@ public class TreeParameters implements Iterable<BranchParameters> {
     public float getRootHeight() {
         return rootHeight;
     } 
+    
+    public void setYOffset( float f ) {
+        this.yOffset = f;
+    }
+    
+    public float getYOffset() {
+        return yOffset;
+    }
  
     public void setLeafScale( float f ) {
         this.leafScale = f;
