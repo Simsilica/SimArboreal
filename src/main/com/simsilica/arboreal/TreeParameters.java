@@ -116,7 +116,15 @@ public class TreeParameters implements Iterable<BranchParameters> {
         this.lodLevels = new LevelOfDetailParameters[4];
         for( int i = 0; i < lodLevels.length; i++ ) {
             lodLevels[i] = new LevelOfDetailParameters();
-        }                           
+            lodLevels[i].distance = (i + 1) * 20;
+            lodLevels[i].branchDepth = 2;
+            lodLevels[i].rootDepth = 2;
+            lodLevels[i].maxRadialSegments = 3;                           
+        }
+        lodLevels[0].maxRadialSegments = Integer.MAX_VALUE;                                   
+        lodLevels[0].branchDepth = depth;
+        lodLevels[0].rootDepth = depth;
+        lodLevels[1].maxRadialSegments = 4;                                   
     }
  
     public void setSeed( int seed ) {
