@@ -56,6 +56,8 @@ import java.util.List;
  */
 public class SkinnedTreeMeshGenerator {
 
+    private CurveGenerator curveGen = CurveGenerator.DEFAULT;
+    
     public Mesh generateMesh( Tree tree, LevelOfDetailParameters lod, float yOffset, int uRepeat, float vScale, List<Vertex> tips ) {
  
         MeshBuilder mb = new MeshBuilder();
@@ -204,47 +206,12 @@ public class SkinnedTreeMeshGenerator {
                     throw new UnsupportedOperationException("Abutment not yet supported.");
                 case Curve:
  
-                    // This is the trickier one.
-                    // We want a smooth transition from one direction to
-                    // another, to include transition for any radius 
-                    // changes that might be required.
-                    Vector3f fromDir = seg.dir;
-                    Vector3f toDir = child.dir;
-                    float dot = fromDir.dot(toDir);
-                    float tiltAngle = FastMath.acos(dot);
-
-                    // How many corners will we have to make to not exceed
-                    // some minimum angle.
-                    float minAngle = (FastMath.DEG_TO_RAD * 15); 
-                    int corners = (int)Math.ceil(tiltAngle / minAngle);
-                    corners = Math.max(1, corners); // always at least one corner
-
-                    // Calculate a minumum distance between slices
-                    float radiusGap = Math.abs(seg.endRadius - child.startRadius);
-                    float radiusGapStep = radiusGap / corners;
-                    float minSlope = 5; // 5:1
-                    float minDist = minSlope * radiusGapStep * dot; // dot is same as FastMath.cos(tiltAngle);
-                    float vNextScale = vScale / child.startRadius;
-                    float angleDelta = tiltAngle / corners;
-                    float radiusPart = (seg.endRadius - child.startRadius) / corners;
-                    float vScalePart = (vScale - vNextScale) / corners;        
- 
-                    Quaternion q1 = null;
-                    Quaternion q2 = null;
-                    if( dot != 1 ) {
-                        // Calculate starting and engine quaternions representing
-                        // the directions.
-                        Vector3f left = fromDir.cross(toDir).normalizeLocal();
-                        
-                        q1 = new Quaternion().fromAxes(left, fromDir.cross(left), fromDir);
-                        q2 = new Quaternion().fromAxes(left, toDir.cross(left), toDir);
-                    } 
- 
                     List<Vertex> newTip = tip;
+                    float v = 0;
                     
                     if( !renderNextDepth ) {
                         if( !capped ) {
-                            // Cap the previous level off... but only the first time we need to
+                            // Cap the previous level off... but only for the first child do we need to
                             capped = true;
                             Vertex tipCenter = addCap(tip, seg, vBase, uRepeat, vScaleLocal, mb);
                             tip = new ArrayList<Vertex>();
@@ -259,26 +226,18 @@ public class SkinnedTreeMeshGenerator {
                         newTip = new ArrayList<Vertex>();
                         newTip.add(tipCenter);
                     }
-                    
-                    float v = vBase; 
-                    for( int i = 0; i < corners; i++ ) {
-                        float a = (i + 1) * angleDelta;
-                        float r = seg.endRadius - (radiusPart * (i+1));
-                        float dist = seg.endRadius * FastMath.sin(angleDelta) * 1.4f; // magic number
-                        dist = Math.max(dist, minDist);
-                        Vector3f dir;
-                        if( q1 == null ) {
-                            dir = child.dir;
-                        } else {
-                            Quaternion q = new Quaternion().slerp(q1, q2, (float)(i+1)/corners);
-                            dir = q.mult(Vector3f.UNIT_Z);
-                        }
+                
+                    List<CurveStep> steps = curveGen.generateCurve(seg.dir, seg.endRadius,
+                                                                   child.dir, child.startRadius,
+                                                                   vBase, vScale);
  
-                        v += dist * (vScaleLocal - (vScalePart * (i+1)));
-                        
+                    v = 0;                                                                  
+                    for( CurveStep step : steps ) {
+                        v = step.v;
                         if( renderNextDepth ) {
-                            newTip = mb.extrude(newTip, dir, dist, effectiveRadials, r, 0);
-                            mb.textureLoop(newTip, new Vector2f(0, v), new Vector2f(uRepeat, 0));
+                            newTip = mb.extrude(newTip, step.dir, step.distance, step.offset,
+                                                effectiveRadials, step.radius, 0);
+                            mb.textureLoop(newTip, new Vector2f(0, step.v), new Vector2f(uRepeat, 0));
                             applyTangents(newTip, child.isInverted());
                         } else {
                             if( newTip.size() != 1 ) {
@@ -286,11 +245,11 @@ public class SkinnedTreeMeshGenerator {
                             }
                             // Extend the tip
                             Vertex tipCenter = newTip.get(0);
-                            tipCenter.pos.addLocal(dir.mult(dist));                            
-                            tipCenter.normal = dir;
+                            tipCenter.pos.addLocal(step.dir.mult(step.distance));                            
+                            tipCenter.normal = step.dir;
                         }                           
-                    }                   
- 
+                    }
+                    
                     addBranches(newTip, child, v, uRepeat, vScale, lod, depth + 1, mb, tips);
                 
                     break;
