@@ -231,23 +231,28 @@ public class SkinnedTreeMeshGenerator {
                                                                    child.dir, child.startRadius,
                                                                    vBase, vScale);
  
-                    v = 0;                                                                  
-                    for( CurveStep step : steps ) {
+                    if( renderNextDepth ) {
+                        v = 0;                                                                  
+                        for( CurveStep step : steps ) {
+                            v = step.v;
+                            if( renderNextDepth ) {
+                                newTip = mb.extrude(newTip, step.dir, step.distance, step.offset,
+                                                    effectiveRadials, step.radius, 0);
+                                mb.textureLoop(newTip, new Vector2f(0, step.v), new Vector2f(uRepeat, 0));
+                                applyTangents(newTip, child.isInverted());
+                            } 
+                        }
+                    } else {
+                        // Just advance the tip to the end
+                        if( newTip.size() != 1 ) {
+                            throw new IllegalStateException("Tip state not properly passed through");
+                        }
+                        // Extend the tip
+                        CurveStep step = steps.get(steps.size() - 1);
+                        Vertex tipCenter = newTip.get(0);
+                        tipCenter.pos.addLocal(step.center);                            
+                        tipCenter.normal = step.dir;
                         v = step.v;
-                        if( renderNextDepth ) {
-                            newTip = mb.extrude(newTip, step.dir, step.distance, step.offset,
-                                                effectiveRadials, step.radius, 0);
-                            mb.textureLoop(newTip, new Vector2f(0, step.v), new Vector2f(uRepeat, 0));
-                            applyTangents(newTip, child.isInverted());
-                        } else {
-                            if( newTip.size() != 1 ) {
-                                throw new IllegalStateException("Tip state not properly passed through");
-                            }
-                            // Extend the tip
-                            Vertex tipCenter = newTip.get(0);
-                            tipCenter.pos.addLocal(step.dir.mult(step.distance));                            
-                            tipCenter.normal = step.dir;
-                        }                           
                     }
                     
                     addBranches(newTip, child, v, uRepeat, vScale, lod, depth + 1, mb, tips);

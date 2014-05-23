@@ -526,6 +526,10 @@ public class MeshBuilder {
         return newLoop;
     }
 
+    public List<Vertex> getVertexes() {
+        return verts;
+    }
+
     public Mesh build() {
         if( verts.isEmpty() || triangles.isEmpty() ) {
             return null;
