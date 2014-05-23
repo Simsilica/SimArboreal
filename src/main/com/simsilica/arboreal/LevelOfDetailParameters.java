@@ -47,7 +47,7 @@ public class LevelOfDetailParameters {
  
     public enum ReductionType { 
     
-        None("None"), FlatPoly("Flat-poly"), Impostor("Impostor"); 
+        Normal("Normal"), FlatPoly("Flat-poly"), Impostor("Impostor"); 
         
         private String name;
         
@@ -92,7 +92,7 @@ public class LevelOfDetailParameters {
  
     
     public LevelOfDetailParameters() {
-        this(0, ReductionType.None, Integer.MAX_VALUE, Integer.MAX_VALUE, 6);        
+        this(0, ReductionType.Normal, Integer.MAX_VALUE, Integer.MAX_VALUE, 6);        
     }
     
     public LevelOfDetailParameters( float distance, ReductionType reduction, int branchDepth,
