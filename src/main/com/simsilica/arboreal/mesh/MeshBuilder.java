@@ -347,13 +347,16 @@ public class MeshBuilder {
     public void textureLoop( List<Vertex> loop, Vector2f base, Vector2f range ) {
         
         int count = loop.size();
-        float uDelta = range.x / count;
-        float vDelta = range.y / count;
+        if( count <= 1 ) {
+            return;
+        }
+        float uDelta = range.x / (count-1);
+        float vDelta = range.y / (count-1);
         float xBase = base.x;
         if( uDelta < 0 ) {
-            xBase = (range.x * -1) + uDelta;
+            xBase = (range.x * -1); 
         }
-        
+ 
         for( int i = 0; i < count; i++ ) {
             float u = xBase + i * uDelta;
             float v = base.y + i * vDelta;
