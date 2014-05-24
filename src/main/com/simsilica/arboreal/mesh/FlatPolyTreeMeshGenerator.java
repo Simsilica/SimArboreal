@@ -79,10 +79,10 @@ public class FlatPolyTreeMeshGenerator {
         // points.
  
         // parms: float x, float y, float z, float u, float v, int group, float epsilon         
-        Vertex base1 = mb.createVertex(-trunk.startRadius, yOffset, 0, 0, 0, 0, -1);
+        Vertex base1 = mb.createVertex(0, yOffset, 0, 0, 0, 0, -1);
         base1.normal = new Vector3f(0, 1, 0); 
-        base1.weight = trunk.startRadius;
-        Vertex base2 = mb.createVertex(+trunk.startRadius, yOffset, 0, uRepeat * 0.5f, 0, 0, -1);
+        base1.weight = -trunk.startRadius;
+        Vertex base2 = mb.createVertex(0, yOffset, 0, uRepeat * 0.5f, 0, 0, -1);
         base2.normal = base1.normal;
         base2.weight = trunk.startRadius;
  
@@ -110,7 +110,6 @@ public class FlatPolyTreeMeshGenerator {
         List<Vertex> verts = mb.getVertexes();
         FloatBuffer sb = BufferUtils.createFloatBuffer(verts.size());
         for( Vertex v : verts ) {
-System.out.println( "v weight:" + v.weight );           
             sb.put(v.weight);
         }
         result.setBuffer(Type.Size, 1, sb);
@@ -160,11 +159,18 @@ System.out.println( "v weight:" + v.weight );
                     break;
                 }
             }
+ 
+            Vector3f nextCenter = next;
+            if( tipDir == seg.dir && seg.hasChildren() ) {
+                // Bump the next vertexs out a little bit to make up for
+                // the lack of joining curves.
+                nextCenter = next.add(seg.dir.mult(seg.endRadius));
+            }
             
             // Now we can properly define the new tips and add this segment's quad
-            tip1 = mb.createVertex(next.x - seg.endRadius, next.y, next.z, 0, vBase, 0, -1);
-            tip1.weight = seg.endRadius;
-            tip2 = mb.createVertex(next.x + seg.endRadius, next.y, next.z, uRepeat * 0.5f, vBase, 0, -1);
+            tip1 = mb.createVertex(nextCenter.x, nextCenter.y, nextCenter.z, 0, vBase, 0, -1);
+            tip1.weight = -seg.endRadius;
+            tip2 = mb.createVertex(nextCenter.x, nextCenter.y, nextCenter.z, uRepeat * 0.5f, vBase, 0, -1);
             tip2.weight = seg.endRadius;
  
             if( vScale > 0 ) {
@@ -211,6 +217,10 @@ System.out.println( "v weight:" + v.weight );
                                                                    vBase, vScale);
                     CurveStep last = steps.get(steps.size()-1);
                     Vector3f childCenter = next.add(last.center);
+                    
+                    // Bump the base back a little
+                    Vector3f baseCenter = childCenter.subtract(child.dir.mult(child.startRadius));
+                    
                     float v = vBase + last.v;
  
                     if( !renderNextDepth ) {
@@ -218,14 +228,14 @@ System.out.println( "v weight:" + v.weight );
                         renderSegment(childCenter, null, null, child, v, uRepeat, vScale, lod, depth + 1, mb, tips);
                     } else {                    
                         // Create some new bases for this child 
-                        Vertex cBase1 = mb.createVertex(childCenter.x - child.startRadius, 
-                                                        childCenter.y, 
-                                                        childCenter.z,
+                        Vertex cBase1 = mb.createVertex(baseCenter.x, 
+                                                        baseCenter.y, 
+                                                        baseCenter.z,
                                                         0, v, 0, -1);
-                        cBase1.weight = child.startRadius;
-                        Vertex cBase2 = mb.createVertex(childCenter.x + child.startRadius, 
-                                                        childCenter.y, 
-                                                        childCenter.z,
+                        cBase1.weight = -child.startRadius;
+                        Vertex cBase2 = mb.createVertex(baseCenter.x, 
+                                                        baseCenter.y, 
+                                                        baseCenter.z,
                                                         uRepeat * 0.5f, v, 0, -1);
                         cBase2.weight = child.startRadius;
                         if( vScale > 0 ) {
