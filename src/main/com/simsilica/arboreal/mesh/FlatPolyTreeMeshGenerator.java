@@ -159,18 +159,23 @@ public class FlatPolyTreeMeshGenerator {
                     break;
                 }
             }
+            
+            float v = vBase;
  
             Vector3f nextCenter = next;
             if( tipDir == seg.dir && seg.hasChildren() ) {
                 // Bump the next vertexs out a little bit to make up for
                 // the lack of joining curves.
                 nextCenter = next.add(seg.dir.mult(seg.endRadius));
+                
+                // And v
+                v += vScaleLocal * seg.endRadius;
             }
             
             // Now we can properly define the new tips and add this segment's quad
-            tip1 = mb.createVertex(nextCenter.x, nextCenter.y, nextCenter.z, 0, vBase, 0, -1);
+            tip1 = mb.createVertex(nextCenter.x, nextCenter.y, nextCenter.z, 0, v, 0, -1);
             tip1.weight = -seg.endRadius;
-            tip2 = mb.createVertex(nextCenter.x, nextCenter.y, nextCenter.z, uRepeat * 0.5f, vBase, 0, -1);
+            tip2 = mb.createVertex(nextCenter.x, nextCenter.y, nextCenter.z, uRepeat * 0.5f, v, 0, -1);
             tip2.weight = seg.endRadius;
  
             if( vScale > 0 ) {
@@ -222,6 +227,9 @@ public class FlatPolyTreeMeshGenerator {
                     Vector3f baseCenter = childCenter.subtract(child.dir.mult(child.startRadius));
                     
                     float v = vBase + last.v;
+                    
+                    // Bump it back a little to go with the moved base
+                    float adjustedV = v - vScaleLocal * child.startRadius;
  
                     if( !renderNextDepth ) {
                         // Then just push through
@@ -231,12 +239,12 @@ public class FlatPolyTreeMeshGenerator {
                         Vertex cBase1 = mb.createVertex(baseCenter.x, 
                                                         baseCenter.y, 
                                                         baseCenter.z,
-                                                        0, v, 0, -1);
+                                                        0, adjustedV, 0, -1);
                         cBase1.weight = -child.startRadius;
                         Vertex cBase2 = mb.createVertex(baseCenter.x, 
                                                         baseCenter.y, 
                                                         baseCenter.z,
-                                                        uRepeat * 0.5f, v, 0, -1);
+                                                        uRepeat * 0.5f, adjustedV, 0, -1);
                         cBase2.weight = child.startRadius;
                         if( vScale > 0 ) {
                             cBase1.normal = child.dir;
