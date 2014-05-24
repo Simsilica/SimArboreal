@@ -36,6 +36,7 @@
 
 package com.simsilica.arboreal;
 
+import com.simsilica.arboreal.LevelOfDetailParameters.ReductionType;
 import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -52,6 +53,7 @@ public class TreeParameters implements Iterable<BranchParameters> {
     private static final int VERSION = 1;
     private static final String BRANCHES_KEY = "branches";
     private static final String ROOTS_KEY = "roots";
+    private static final String LODS_KEY = "lodLevels";
 
     private BranchParameters[] branches;
     private BranchParameters[] roots;
@@ -119,12 +121,16 @@ public class TreeParameters implements Iterable<BranchParameters> {
             lodLevels[i].distance = (i + 1) * 20;
             lodLevels[i].branchDepth = 2;
             lodLevels[i].rootDepth = 2;
-            lodLevels[i].maxRadialSegments = 3;                           
+            lodLevels[i].maxRadialSegments = 3;
+            if( i > 0 ) {
+                lodLevels[i].reduction = ReductionType.FlatPoly;
+            }                           
         }
         lodLevels[0].maxRadialSegments = Integer.MAX_VALUE;                                   
         lodLevels[0].branchDepth = depth;
         lodLevels[0].rootDepth = depth;
-        lodLevels[1].maxRadialSegments = 4;                                   
+        lodLevels[1].maxRadialSegments = 4;
+        lodLevels[lodLevels.length-1].distance = Float.MAX_VALUE;                                   
     }
  
     public void setSeed( int seed ) {
@@ -283,6 +289,25 @@ public class TreeParameters implements Iterable<BranchParameters> {
         }
         return result;
     }
+
+    private LevelOfDetailParameters[] listToLods( List<Map<String, Object>> list, LevelOfDetailParameters[] result ) {
+        if( result.length != list.size() ) {
+            LevelOfDetailParameters[] newArray = new LevelOfDetailParameters[list.size()];
+            for( int i = 0; i < newArray.length; i++ ) {
+                if( i < result.length ) {
+                    newArray[i] = result[i];
+                }
+            }
+        }
+        for( int i = 0; i < result.length; i++ ) {
+            Map<String, Object> value = list.get(i);
+            if( result[i] == null ) {
+                result[i] = new LevelOfDetailParameters();
+            }
+            result[i].fromMap(value);
+        }
+        return result;
+    }
  
     public void fromMap( Map<String, Object> map ) {
         Number version = (Number)map.get(VERSION_KEY);
@@ -302,6 +327,8 @@ public class TreeParameters implements Iterable<BranchParameters> {
                 branches = listToBranches((List<Map<String, Object>>)e.getValue(), branches);
             } else if( ROOTS_KEY.equals(e.getKey()) ) {
                 roots = listToBranches((List<Map<String, Object>>)e.getValue(), roots);
+            } else if( LODS_KEY.equals(e.getKey()) ) {
+                lodLevels = listToLods((List<Map<String, Object>>)e.getValue(), lodLevels);
             } else {                
                 PropertyDescriptor pd = findProperty(info, e.getKey());
                 Method m = pd.getWriteMethod();                
@@ -362,6 +389,12 @@ public class TreeParameters implements Iterable<BranchParameters> {
             list.add(bp.toMap());   
         }
         result.put(ROOTS_KEY, list);
+
+        list = new ArrayList<Map<String, Object>>(lodLevels.length);
+        for( LevelOfDetailParameters lod : lodLevels ) {
+            list.add(lod.toMap());   
+        }
+        result.put(LODS_KEY, list);
         
         return result;
     } 

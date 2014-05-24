@@ -36,6 +36,10 @@
 
 package com.simsilica.arboreal;
 
+import java.lang.reflect.Field;
+import java.util.Map;
+import java.util.TreeMap;
+
 
 /**
  *  Defines the level of detail settings for a particular
@@ -44,7 +48,9 @@ package com.simsilica.arboreal;
  *  @author    Paul Speed
  */
 public class LevelOfDetailParameters {
- 
+    private static final String VERSION_KEY = "formatVersion";
+    private static final int VERSION = 1;
+
     public enum ReductionType { 
     
         Normal("Normal"), FlatPoly("Flat-poly"), Impostor("Impostor"); 
@@ -103,6 +109,54 @@ public class LevelOfDetailParameters {
         this.rootDepth = rootDepth;
         this.maxRadialSegments = maxRadialSegments;
     }
+ 
+    public void fromMap( Map<String, Object> map ) {
+        Number version = (Number)map.get(VERSION_KEY);
+ 
+        Class type = getClass();       
+        for( Map.Entry<String, Object> e : map.entrySet() ) {
+            if( VERSION_KEY.equals(e.getKey()) ) {
+                continue;
+            }
+            try {
+                Field f = type.getField(e.getKey());
+                if( f.getType() == Boolean.TYPE ) {
+                    f.set(this, e.getValue());
+                } else if( f.getType() == Integer.TYPE ) {
+                    Number val = (Number)e.getValue();
+                    f.set(this, val.intValue());
+                } else if( f.getType() == Float.TYPE ) {
+                    Number val = (Number)e.getValue();
+                    f.set(this, val.floatValue());
+                } else if( f.getType() == ReductionType.class ) {
+                    f.set(this, Enum.valueOf(ReductionType.class, (String)e.getValue()));
+                } else {
+                    throw new RuntimeException("Unhandled type:" + f.getType());
+                }
+            } catch( Exception ex ) {
+                throw new RuntimeException("Error processing:" + e, ex); 
+            }
+        }               
+    }
+    
+    public Map<String, Object> toMap() {
+ 
+        Map<String, Object> result = new TreeMap<String, Object>();
+        result.put(VERSION_KEY, VERSION);       
+        // Easy for this one
+        for( Field f : getClass().getFields() ) {
+            try {
+                if( f.getType() == ReductionType.class ) {
+                    result.put(f.getName(), ((ReductionType)f.get(this)).name());
+                } else {
+                    result.put(f.getName(), f.get(this));
+                }
+            } catch( Exception e ) {
+                throw new RuntimeException("Error getting field:" + f, e);
+            }
+        } 
+        return result;
+    }    
  
     @Override   
     public String toString() {
