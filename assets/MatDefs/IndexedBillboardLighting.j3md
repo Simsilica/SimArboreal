@@ -137,7 +137,7 @@ MaterialDef Phong Lighting {
 
         LightMode MultiPass
 
-        VertexShader GLSL110:   MatDefs/AxisBillboardLighting.vert
+        VertexShader GLSL110:   MatDefs/IndexedBillboardLighting.vert
         FragmentShader GLSL110: Common/MatDefs/Light/Lighting.frag
 
         WorldParameters {
@@ -183,7 +183,7 @@ MaterialDef Phong Lighting {
 
     Technique PreShadow {
 
-        VertexShader GLSL100 :   MatDefs/AxisBillboardPreShadow.vert
+        VertexShader GLSL100 :   MatDefs/IndexedBillboardPreShadow.vert
         FragmentShader GLSL100 : Common/MatDefs/Shadow/PreShadow.frag
 
         WorldParameters {
@@ -191,6 +191,9 @@ MaterialDef Phong Lighting {
             WorldViewMatrix
             ProjectionMatrix
             NormalMatrix
+            CameraPosition
+            WorldMatrix
+            ViewProjectionMatrix
         }
 
         Defines {
