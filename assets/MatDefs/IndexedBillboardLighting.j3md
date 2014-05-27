@@ -149,6 +149,7 @@ MaterialDef Phong Lighting {
             CameraPosition
             WorldMatrix
             ProjectionMatrix
+            WorldMatrixInverse
         }
 
         Defines {

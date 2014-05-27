@@ -10,6 +10,7 @@ uniform mat3 g_NormalMatrix;
 uniform mat4 g_ViewMatrix;
 uniform mat4 g_ViewProjectionMatrix;
 uniform mat4 g_WorldMatrix;
+uniform mat4 g_WorldMatrixInverse;
 uniform vec3 g_CameraPosition;
 
 uniform vec4 m_Ambient;
@@ -199,7 +200,7 @@ void main(){
         
         // rotate the ground direction based on the current rotation
         // of the model
-        groundDir = (g_WorldMatrix * vec4(groundDir, 0.0)).xyz;
+        groundDir = (g_WorldMatrixInverse * vec4(groundDir, 0.0)).xyz;
          
         float x = step(0.0, groundDir.x);
         float z = step(0.0, groundDir.z);
