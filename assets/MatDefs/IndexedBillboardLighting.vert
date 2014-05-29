@@ -184,10 +184,24 @@ void main(){
         vec3 wvPosition = (g_ViewMatrix * wPosition).xyz; 
     
         gl_Position = g_ViewProjectionMatrix * wPosition;
-        
-        //wNormal = (cross(offset, wNormal) * 0.05) + (offset * inSize * texCoord.y);
-        wNormal = (cross(offset, wNormal)) + (offset * inSize * texCoord.y * 1.9);
-        wNormal += vec3(0.0, texCoord.y * 2.0, 0.0);
+ 
+        #if defined(NORMALMAP) && !defined(VERTEX_LIGHTING)
+            // Just use a flat normal since the normal map will
+            //  handle proper variation
+            wNormal = cross(offset, wNormal);
+ 
+            // Ah, except if we look down on the trees then we need to
+            // simulate seeing more of the top
+            wNormal.y -= dir.y;
+            
+            wNormal = normalize(wNormal);      
+        #else
+            //wNormal = (cross(offset, wNormal) * 0.05) + (offset * inSize * texCoord.y);        
+            wNormal = (cross(offset, wNormal)) + (offset * inSize * texCoord.y * 0.9);
+            wNormal += vec3(0.0, texCoord.y, 0.0);
+            
+            //wNormal = cross(offset, wNormal);
+        #endif
         
         vec3 wvNormal = (g_ViewMatrix * vec4(wNormal, 0.0)).xyz;      
     
@@ -207,6 +221,13 @@ void main(){
  
         float uBase = (z * 0.5) + (x * 0.25); 
         texCoord.x = uBase + texCoord.x * 0.25;
+            
+        #if defined(NORMALMAP) && !defined(VERTEX_LIGHTING)
+        
+            // Define the tangent... we can calculate it easily.
+            vec3 wvTangent = (g_ViewMatrix * vec4(offset, 0.0)).xyz;
+        
+        #endif
         
     #else
         // Calculate in viewspace... the billboarding will crawl
@@ -244,14 +265,16 @@ void main(){
    vec4 lightColor = g_LightColor;
 
    #if defined(NORMALMAP) && !defined(VERTEX_LIGHTING)
-     vec3 wvTangent = normalize(g_NormalMatrix * modelSpaceTan);
-     vec3 wvBinormal = cross(wvNormal, wvTangent);
+     //vec3 wvTangent = normalize(g_NormalMatrix * modelSpaceTan);
+     vec3 wvBinormal = cross(-wvNormal, wvTangent);
 
-     mat3 tbnMat = mat3(wvTangent, wvBinormal * -inTangent.w,wvNormal);
+     // *** we have no inTangent
+     // mat3 tbnMat = mat3(wvTangent, wvBinormal * -inTangent.w,wvNormal);
+     mat3 tbnMat = mat3(wvTangent, wvBinormal * 1.0, -wvNormal);
      
      //vPosition = wvPosition * tbnMat;
-     //vViewDir  = viewDir * tbnMat;
-     vViewDir  = -wvPosition * tbnMat;
+     vViewDir  = viewDir * tbnMat;
+     //vViewDir  = -wvPosition * tbnMat;
      lightComputeDir(wvPosition, lightColor, wvLightPos, vLightDir);
      vLightDir.xyz = (vLightDir.xyz * tbnMat).xyz;
    #elif !defined(VERTEX_LIGHTING)

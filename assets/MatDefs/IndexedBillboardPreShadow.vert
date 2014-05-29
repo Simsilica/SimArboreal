@@ -59,6 +59,9 @@ void main(){
         vec3 offset = normalize(vec3(wvNormal.y, -wvNormal.x, 0.0));
         wvPosition += offset * inSize;
  
+        // For shadows, back the top away from us
+        wvPosition.z -= abs(inSize) * inTexCoord.y * 2.0;
+ 
         // ** Now to projection space   
         gl_Position = g_ProjectionMatrix * vec4(wvPosition, 1.0);
   

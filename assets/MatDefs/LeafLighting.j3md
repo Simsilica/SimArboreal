@@ -268,13 +268,18 @@ MaterialDef Phong Lighting {
 
   Technique PreNormalPass {
 
-        VertexShader GLSL100 :   Common/MatDefs/SSAO/normal.vert
+        VertexShader GLSL110 :   MatDefs/LeafNormal.vert
         FragmentShader GLSL100 : Common/MatDefs/SSAO/normal.frag
 
         WorldParameters {
             WorldViewProjectionMatrix
             WorldViewMatrix
             NormalMatrix
+            WorldMatrix
+            ViewMatrix
+            ViewProjectionMatrix
+            ProjectionMatrix
+            CameraPosition
         }
 
         Defines {
