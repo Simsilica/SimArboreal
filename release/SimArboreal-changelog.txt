@@ -1,4 +1,17 @@
 
+Revision 68
+------------
+- Added additional mesh generators for different levels of detail.
+    Flat-Poly : renders the tree branches as a set of axis-aligned
+                billboarded flat quads.
+    Impostor : renders a single quad with a view-direction indexed texture. 
+- Refactored how branch curves are calculated.
+- Added LevelOfDetail parameters object and added it to TreeParamaters.
+- Fixed a texture mapping bug that caused a small seam on branches.
+- Added a simple LOD control (LodSwitchControl) that can be used to switch
+    between tree LODs.
+
+
 Revision 33
 -------------
 - Initial release
