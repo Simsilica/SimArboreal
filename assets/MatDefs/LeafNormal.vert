@@ -13,7 +13,7 @@ uniform mat4 g_WorldViewMatrix;
 attribute vec3 inPosition;
 attribute vec3 inNormal;
 attribute vec4 inTexCoord;
-attribute vec3 inSize;
+attribute float inSize;
 
 varying vec3 normal;
 varying vec2 texCoord;
