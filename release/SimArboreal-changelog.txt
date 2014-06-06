@@ -1,6 +1,9 @@
 
-Revision ??
+Revision 93
 ------------
+-Fixed a typo in the LeafNormal.vert shader that was causing the shader to fail
+	on some platforms.
+
 
 Revision 68
 ------------
