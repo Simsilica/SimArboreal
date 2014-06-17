@@ -3,14 +3,12 @@
 
 #import "Common/ShaderLib/Skinning.glsllib"
 
-uniform mat4 g_ProjectionMatrix;
 uniform mat4 g_WorldViewProjectionMatrix;
+uniform mat4 g_ViewProjectionMatrix;
 uniform mat4 g_WorldViewMatrix;
 uniform mat3 g_NormalMatrix;
 uniform mat4 g_ViewMatrix;
-uniform mat4 g_ViewProjectionMatrix;
 uniform mat4 g_WorldMatrix;
-uniform vec3 g_CameraPosition;
 
 uniform vec4 m_Ambient;
 uniform vec4 m_Diffuse;
@@ -34,7 +32,6 @@ varying vec3 SpecularSum;
 attribute vec3 inPosition;
 attribute vec2 inTexCoord;
 attribute vec3 inNormal;
-attribute float inSize;
 
 varying vec3 lightVec;
 //varying vec4 spotVec;
@@ -44,6 +41,7 @@ varying vec3 lightVec;
 #endif
 
 #import "MatDefs/TreeWind.glsllib"
+
 
 #ifdef VERTEX_COLOR
   attribute vec4 inColor;
@@ -159,75 +157,39 @@ void main(){
         #endif
    #endif
 
-   // *** Changed code marked with ***
-   // *** gl_position is calculated based on vertex attributes below
-   //gl_Position = g_WorldViewProjectionMatrix * modelSpacePos;
    texCoord = inTexCoord;
    #ifdef SEPARATE_TEXCOORD
       texCoord2 = inTexCoord2;
    #endif
 
-   // *** These are now calculated based on vertex attributes below
-   //vec3 wvPosition = (g_WorldViewMatrix * modelSpacePos).xyz;
-   //vec3 wvNormal  = normalize(g_NormalMatrix * modelSpaceNorm);
-   //vec3 wvNormal  = (g_WorldViewMatrix * vec4(modelSpaceNorm, 0.0)).xyz;
-   //vec3 viewDir = normalize(-wvPosition);
+   #ifdef USE_WIND   
+    // some simple wind
+    float windStrength = 0.75;
+    
+    // Need to know the model's ground position for noise basis
+    // otherwise the tree will warp all over the place and it
+    // will look strange as the trunk stretches and shrinks.
+    vec4 groundPos = g_WorldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+    
+    // Wind is applied to world space   
+    vec4 wPos = g_WorldMatrix * modelSpacePos;
+    
+    // Note: if the model position we pass in is not rotated
+    // then the radial turbulence is technically not correct.
+    // But... it's quicker and it adds a little unplanned variance.
+    // Note: that batching will have to do something special, though
+    // instancing will be ok.
+    wPos.xyz += calculateWind(groundPos.xyz, inPosition, windStrength);
  
- 
-    // *** Determine the positions and normals
-    
-    #ifndef SCREENSPACE
-        // The default way   
-        vec4 wPosition = g_WorldMatrix * modelSpacePos;
-        vec3 wNormal = (g_WorldMatrix * vec4(modelSpaceNorm, 0.0)).xyz; 
-        vec3 dir = normalize(wPosition.xyz - g_CameraPosition);
-
-        #ifdef USE_WIND
-            float windStrength = 0.75;
-        
-            // Need to know the model's ground position for noise basis
-            // otherwise the tree will warp all over the place and it
-            // will look strange as the trunk stretches and shrinks.
-            vec4 groundPos = g_WorldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
-    
-            wPosition.xyz += calculateWind(groundPos.xyz, inPosition, windStrength);
-        #endif 
-    
-        vec3 offset = normalize(cross(dir, wNormal));
-        wPosition.xyz += offset * inSize;
-    
-        vec3 wvPosition = (g_ViewMatrix * wPosition).xyz; 
-    
-        gl_Position = g_ViewProjectionMatrix * wPosition;
-        
-        wNormal = (cross(offset, wNormal) * 0.05) + (offset * inSize);
-        vec3 wvNormal = (g_ViewMatrix * vec4(wNormal, 0.0)).xyz;      
-    
-    #else
-        // Calculate in viewspace... the billboarding will crawl
-        // as the camera turns    
-        vec3 wvPosition = (g_WorldViewMatrix * modelSpacePos).xyz;
-        //vec3 wvNormal  = normalize(g_NormalMatrix * modelSpaceNorm);
-        vec3 wvNormal = g_NormalMatrix * modelSpaceNorm;
-        
-        vec3 offset = normalize(vec3(wvNormal.y, -wvNormal.x, 0.0));
-        wvPosition += offset * inSize;
- 
-        gl_Position = g_ProjectionMatrix * vec4(wvPosition, 1.0);
-
-    
-        // Now calculate a splayed normal for this new configuration
-        vec3 surfaceNormal = cross(offset, wvNormal);
-        //wvNormal = normalize((surfaceNormal * 0.25) + (offset * inSize));                 
-        wvNormal = (surfaceNormal * 0.25) + (offset * inSize);                 
-        //wvNormal = normalize(wvNormal); 
-    #endif
-    
+    vec3 wvPosition = (g_ViewMatrix * wPos).xyz;
+    gl_Position = g_ViewProjectionMatrix * wPos;
+   #else
+    gl_Position = g_WorldViewProjectionMatrix * modelSpacePos;
+    vec3 wvPosition = (g_WorldViewMatrix * modelSpacePos).xyz;
+   #endif
+   
    vec3 viewDir = normalize(-wvPosition);
-       
-    // *** end billboard changes
- 
- 
+   vec3 wvNormal  = normalize(g_NormalMatrix * modelSpaceNorm);
   
        //vec4 lightColor = g_LightColor[gl_InstanceID];
        //vec4 lightPos   = g_LightPosition[gl_InstanceID];
@@ -260,7 +222,7 @@ void main(){
      #ifdef V_TANGENT
         vNormal = normalize(g_NormalMatrix * inTangent.xyz);
         vNormal = -cross(cross(vLightDir.xyz, vNormal), vNormal);
-     #endif     
+     #endif
    #endif
 
    //computing spot direction in view space and unpacking spotlight cos

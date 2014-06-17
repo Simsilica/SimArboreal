@@ -131,6 +131,10 @@ MaterialDef Phong Lighting {
         // For hardware skinning
         Int NumberOfBones
         Matrix4Array BoneMatrices
+        
+        // Wind related parameters
+        Texture2D WindNoise
+        Boolean UseWind
     }
 
     Technique {
@@ -148,6 +152,7 @@ MaterialDef Phong Lighting {
             CameraPosition
             WorldMatrix
             ViewProjectionMatrix
+            Time
         }
 
         Defines {
@@ -177,6 +182,8 @@ MaterialDef Phong Lighting {
             SPHERE_MAP : SphereMap  
 
             NUM_BONES : NumberOfBones
+            
+            USE_WIND : UseWind
         }
     }
 
@@ -188,13 +195,18 @@ MaterialDef Phong Lighting {
         WorldParameters {
             WorldViewProjectionMatrix
             WorldViewMatrix
+            ViewMatrix
             ProjectionMatrix
+            WorldMatrix
+            Time
         }
 
         Defines {
             COLOR_MAP : ColorMap
             DISCARD_ALPHA : AlphaDiscardThreshold
             NUM_BONES : NumberOfBones
+            
+            USE_WIND : UseWind
         }
 
         ForcedRenderState {

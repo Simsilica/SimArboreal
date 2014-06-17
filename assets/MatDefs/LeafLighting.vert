@@ -38,6 +38,12 @@ attribute float inSize;
 varying vec3 lightVec;
 //varying vec4 spotVec;
 
+#ifdef USE_WIND
+  uniform float g_Time; 
+#endif
+
+#import "MatDefs/TreeWind.glsllib"
+
 #ifdef VERTEX_COLOR
   attribute vec4 inColor;
 #endif
@@ -185,6 +191,15 @@ void main(){
         // Get the world position (not world view) because
         // billboarding will be done in world space
         vec4 wPosition = g_WorldMatrix * modelSpacePos; 
+
+        #ifdef USE_WIND
+            // Calculate the wind from the unprojected position so that
+            // the whole leaf quad gets the same wind
+            vec4 groundPos = g_WorldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+            float windStrength = 0.75;
+            vec3 wind = calculateWind(groundPos.xyz, inPosition, windStrength);
+            wPosition.xyz += wind;
+        #endif
 
         // Calculate the screen parallel axis vectors
         vec3 dir = normalize(wPosition.xyz - g_CameraPosition);

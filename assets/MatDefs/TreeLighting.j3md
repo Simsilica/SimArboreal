@@ -1,4 +1,4 @@
-MaterialDef Phong Lighting {
+MaterialDef Tree Lighting {
 
     MaterialParameters {
 
@@ -132,16 +132,16 @@ MaterialDef Phong Lighting {
         Int NumberOfBones
         Matrix4Array BoneMatrices
         
-        // For wind
+        // Wind related parameters
         Texture2D WindNoise
-        Boolean UseWind        
+        Boolean UseWind
     }
 
     Technique {
 
         LightMode MultiPass
 
-        VertexShader GLSL110:   MatDefs/AxisBillboardLighting.vert
+        VertexShader GLSL110:   MatDefs/TreeLighting.vert
         FragmentShader GLSL110: Common/MatDefs/Light/Lighting.frag
 
         WorldParameters {
@@ -152,7 +152,6 @@ MaterialDef Phong Lighting {
             ViewMatrix
             CameraPosition
             WorldMatrix
-            ProjectionMatrix
             Time
         }
 
@@ -184,22 +183,21 @@ MaterialDef Phong Lighting {
 
             NUM_BONES : NumberOfBones
             
+            // Wind related
             USE_WIND : UseWind
         }
     }
 
     Technique PreShadow {
 
-        VertexShader GLSL110 :   MatDefs/AxisBillboardPreShadow.vert
+        VertexShader GLSL110 :   MatDefs/TreePreShadow.vert
         FragmentShader GLSL100 : Common/MatDefs/Shadow/PreShadow.frag
 
         WorldParameters {
             WorldViewProjectionMatrix
             WorldViewMatrix
-            ProjectionMatrix
-            NormalMatrix
             WorldMatrix
-            ViewMatrix
+            ViewProjectionMatrix
             Time
         }
 
@@ -207,7 +205,8 @@ MaterialDef Phong Lighting {
             COLOR_MAP : ColorMap
             DISCARD_ALPHA : AlphaDiscardThreshold
             NUM_BONES : NumberOfBones
-                        
+            
+            // Wind related
             USE_WIND : UseWind
         }
 

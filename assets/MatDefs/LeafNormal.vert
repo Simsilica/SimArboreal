@@ -52,7 +52,7 @@ void main(void)
         vec3 wvPosition = (g_WorldViewMatrix * modelSpacePos).xyz;
         wvPosition.x += (corner.x - 0.5) * inSize;
         wvPosition.y += (corner.y - 0.5) * inSize;
-    
+ 
         gl_Position = g_ProjectionMatrix * vec4(wvPosition, 1.0);
 
         vec3 wvNormal = normalize(vec3(corner.x - 0.5, corner.y - 0.5, 0.5));     
