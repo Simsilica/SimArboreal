@@ -41,7 +41,7 @@ void main(){
         vec4 wPos = g_WorldMatrix * modelSpacePos;
         vec4 groundPos = g_WorldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
         float windStrength = 0.75;
-        vec3 wind = calculateWind(groundPos.xyz, inPosition, windStrength);
+        vec3 wind = calculateWind(groundPos.xyz, wPos.xyz - groundPos.xyz, windStrength);
         wvPosition += (g_ViewMatrix * vec4(wind, 0.0)).xyz;
     #endif    
  

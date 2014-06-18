@@ -187,10 +187,10 @@ void main(){
         
             // Need to know the model's ground position for noise basis
             // otherwise the tree will warp all over the place and it
-            // will look strange as the trunk stretches and shrinks.
+            // will look strange as the trunk stretches and shrinks.            
             vec4 groundPos = g_WorldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
     
-            wPosition.xyz += calculateWind(groundPos.xyz, inPosition, windStrength);
+            wPosition.xyz += calculateWind(groundPos.xyz, wPosition.xyz - groundPos.xyz, windStrength);
         #endif 
     
         vec3 offset = normalize(cross(dir, wNormal));

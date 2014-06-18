@@ -197,7 +197,7 @@ void main(){
             // the whole leaf quad gets the same wind
             vec4 groundPos = g_WorldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
             float windStrength = 0.75;
-            vec3 wind = calculateWind(groundPos.xyz, inPosition, windStrength);
+            vec3 wind = calculateWind(groundPos.xyz, wPosition.xyz - groundPos.xyz, windStrength);
             wPosition.xyz += wind;
         #endif
 

@@ -174,12 +174,7 @@ void main(){
     // Wind is applied to world space   
     vec4 wPos = g_WorldMatrix * modelSpacePos;
     
-    // Note: if the model position we pass in is not rotated
-    // then the radial turbulence is technically not correct.
-    // But... it's quicker and it adds a little unplanned variance.
-    // Note: that batching will have to do something special, though
-    // instancing will be ok.
-    wPos.xyz += calculateWind(groundPos.xyz, inPosition, windStrength);
+    wPos.xyz += calculateWind(groundPos.xyz, wPos.xyz - groundPos.xyz, windStrength);
  
     vec3 wvPosition = (g_ViewMatrix * wPos).xyz;
     gl_Position = g_ViewProjectionMatrix * wPos;
