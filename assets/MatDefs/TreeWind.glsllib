@@ -22,8 +22,14 @@ vec3 calculateWind( in vec3 groundPos, in vec3 modelPos, in float windStrength )
     // Calculate the base strength of movement from the 
     // elevation of the point.  This is the rocking of the whole
     // tree
-    float height = max(0.0, modelPos.y); 
-    float strength = noise.y * 0.05 * height;
+    float height = max(0.0, modelPos.y);
+    
+    // Bend the 'trunkHeight' portion of the tree along a 
+    // simple parabolic curve.  x = y * y
+    float trunkHeight = 4.0;
+    float factor = min(1.0, height / trunkHeight);
+    float bend = trunkHeight * factor * factor + max(0.0, height - trunkHeight);
+    float strength = noise.y * 0.05 * bend; 
     float timeShift = (noise.x - 0.5) * 2.0 + groundPos.x + groundPos.z;
 
 
@@ -34,7 +40,7 @@ vec3 calculateWind( in vec3 groundPos, in vec3 modelPos, in float windStrength )
     // Add in some radial turbulence by figuring out how
     // far the branch is the center of the tree and it's
     // relative direction to the root
-    float turbulence = max(0.0, dir2.z * height);
+    float turbulence = max(0.0, dir2.z * bend); 
     float turbulenceStrength = length(dir2.xz);
     turbulenceStrength *= turbulenceStrength;  // parabolic curve
     turbulenceStrength *= 0.1;
