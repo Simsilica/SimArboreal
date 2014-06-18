@@ -63,6 +63,9 @@ public class TreeParameters implements Iterable<BranchParameters> {
     private float trunkHeight = 6 * 0.3f;
     private float rootHeight = 1 * 0.3f;
     private float yOffset = 1 * 0.3f;
+    private float flexHeight = 2.0f;
+    private float trunkFlexibility = 1.0f;
+    private float branchFlexibility = 1.0f;
     private int uRepeat = 4;
     private float vScale = 0.45f;
     private float leafScale = 1;
@@ -213,6 +216,30 @@ public class TreeParameters implements Iterable<BranchParameters> {
         return vScale;
     }
  
+    public void setFlexHeight( float f ) {
+        this.flexHeight = f;
+    }
+ 
+    public float getFlexHeight() {
+        return flexHeight;
+    }
+    
+    public void setTrunkFlexibility( float f ) {
+        this.trunkFlexibility = f;
+    }
+    
+    public float getTrunkFlexibility() {
+        return trunkFlexibility;
+    }
+    
+    public void setBranchFlexibility( float f ) {
+        this.branchFlexibility = f;
+    }
+    
+    public float getBranchFlexibility() {
+        return branchFlexibility;
+    }
+ 
     public int getDepth() {
         return branches.length;
     }
@@ -229,6 +256,7 @@ public class TreeParameters implements Iterable<BranchParameters> {
         return list;
     }
     
+    @Override
     public Iterator<BranchParameters> iterator() {
         return new BranchIterator();
     }
@@ -436,10 +464,12 @@ public class TreeParameters implements Iterable<BranchParameters> {
             this.last = getBranch(0); 
         }
         
+        @Override
         public boolean hasNext() {
             return next < getDepth() && getBranch(next).enabled;
         }
         
+        @Override
         public BranchParameters next() {
             BranchParameters result = getBranch(next++);
             if( !result.enabled ) {
@@ -453,6 +483,7 @@ public class TreeParameters implements Iterable<BranchParameters> {
             return result;           
         }
         
+        @Override
         public void remove() {
             throw new UnsupportedOperationException("Cannot remove branch parameters.");
         }
@@ -467,10 +498,12 @@ public class TreeParameters implements Iterable<BranchParameters> {
             this.last = getRoot(0); 
         }
         
+        @Override
         public boolean hasNext() {
             return next < getDepth() && getRoot(next).enabled;
         }
         
+        @Override
         public BranchParameters next() {
             BranchParameters result = getRoot(next++);
             if( !result.enabled ) {
@@ -484,6 +517,7 @@ public class TreeParameters implements Iterable<BranchParameters> {
             return result;           
         }
         
+        @Override
         public void remove() {
             throw new UnsupportedOperationException("Cannot remove branch parameters.");
         }

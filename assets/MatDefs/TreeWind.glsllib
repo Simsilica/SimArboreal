@@ -3,6 +3,9 @@
 
 uniform sampler2D m_WindNoise;
 
+uniform float m_FlexHeight;
+uniform float m_TrunkFlexibility;
+uniform float m_BranchFlexibility;
 
 // A simple noise + time based wind
 vec3 calculateWind( in vec3 groundPos, in vec3 modelPos, in float windStrength ) {
@@ -26,10 +29,10 @@ vec3 calculateWind( in vec3 groundPos, in vec3 modelPos, in float windStrength )
     
     // Bend the 'trunkHeight' portion of the tree along a 
     // simple parabolic curve.  x = y * y
-    float trunkHeight = 4.0;
+    float trunkHeight = m_FlexHeight;
     float factor = min(1.0, height / trunkHeight);
     float bend = trunkHeight * factor * factor + max(0.0, height - trunkHeight);
-    float strength = noise.y * 0.05 * bend; 
+    float strength = noise.y * 0.05 * bend * m_TrunkFlexibility; 
     float timeShift = (noise.x - 0.5) * 2.0 + groundPos.x + groundPos.z;
 
 
@@ -49,7 +52,7 @@ vec3 calculateWind( in vec3 groundPos, in vec3 modelPos, in float windStrength )
     // to give the branches a delayed reaction   
     vec4 noise2 = texture2D(m_WindNoise, vec2(groundPos.x * 0.01 + (g_Time - 0.5) * 0.05, groundPos.z * 0.01));
     float timeShift2 = (noise2.x - 0.5) * 2.0 + groundPos.x + groundPos.z;
-    float strength2 = turbulence * turbulenceStrength * windStrength;
+    float strength2 = turbulence * turbulenceStrength * windStrength * m_BranchFlexibility;
     strength2 *= noise2.y;
     float deflect2 = sin(timeMultiplier * (g_Time + timeShift2) * 2.0) * strength2; 
     wind.x += deflect2;
@@ -78,7 +81,7 @@ vec3 calculateImpostorWind( in vec3 groundPos, in vec3 modelPos, in float windSt
     // elevation of the point.  This is the rocking of the whole
     // tree
     float height = max(0.0, modelPos.y); 
-    float strength = noise.y * 0.05 * height;
+    float strength = noise.y * 0.05 * height * m_TrunkFlexibility;
     float timeShift = (noise.x - 0.5) * 2.0 + groundPos.x + groundPos.z;
 
     float deflect = sin(timeMultiplier * (g_Time + timeShift)) * windStrength * strength; 

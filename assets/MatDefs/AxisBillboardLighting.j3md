@@ -135,6 +135,9 @@ MaterialDef Phong Lighting {
         // For wind
         Texture2D WindNoise
         Boolean UseWind        
+        Float FlexHeight : 2.0
+        Float TrunkFlexibility : 1.0
+        Float BranchFlexibility : 1.0
     }
 
     Technique {
