@@ -1,18 +1,25 @@
 #import "Common/ShaderLib/Skinning.glsllib"
 attribute vec3 inPosition;
 attribute vec3 inNormal;
-attribute vec4 inTexCoord;
+attribute vec2 inTexCoord;
 attribute float inSize;
 
 uniform mat4 g_WorldViewProjectionMatrix;
 uniform mat4 g_WorldViewMatrix;
 uniform mat4 g_WorldMatrix;
+uniform mat4 g_ViewMatrix;
 uniform mat4 g_ViewProjectionMatrix;
 uniform mat4 g_ProjectionMatrix;
 uniform mat3 g_NormalMatrix;
 uniform vec3 g_CameraPosition;
 
 varying vec2 texCoord;
+
+#ifdef USE_WIND
+  uniform float g_Time; 
+#endif
+
+#import "MatDefs/TreeWind.glsllib"
 
 void main(){
     vec4 modelSpacePos = vec4(inPosition, 1.0);
@@ -54,6 +61,19 @@ void main(){
         // ** The normal in this case is really the axis 
         //vec3 wvNormal = g_NormalMatrix * modelSpaceNorm;
         vec3 wvNormal = g_NormalMatrix * vec3(0.0, 1.0, 0.0);
+ 
+        #ifdef USE_WIND
+            // Calculate the wind from the unprojected position so that
+            // the whole leaf quad gets the same wind
+            vec4 wPos = g_WorldMatrix * modelSpacePos;
+            
+            vec4 flatGroundPosition = g_WorldMatrix * modelSpacePos;
+ 
+            float windStrength = 0.75;
+            vec3 localPos = vec3(inSize, abs(inSize) * texCoord.y * 2.0, 0.0);
+            vec3 wind = calculateImpostorWind(flatGroundPosition.xyz, localPos, windStrength);
+            wvPosition += (g_ViewMatrix * vec4(wind, 0.0)).xyz;
+        #endif    
  
         // ** Simple x,y inversion works for an orthogonal vector       
         vec3 offset = normalize(vec3(wvNormal.y, -wvNormal.x, 0.0));

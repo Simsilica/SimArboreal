@@ -130,7 +130,11 @@ MaterialDef Phong Lighting {
 
         // For hardware skinning
         Int NumberOfBones
-        Matrix4Array BoneMatrices        
+        Matrix4Array BoneMatrices
+        
+        // For wind
+        Texture2D WindNoise
+        Boolean UseWind        
     }
 
     Technique {
@@ -150,6 +154,7 @@ MaterialDef Phong Lighting {
             WorldMatrix
             ProjectionMatrix
             WorldMatrixInverse
+            Time
         }
 
         Defines {
@@ -179,12 +184,14 @@ MaterialDef Phong Lighting {
             SPHERE_MAP : SphereMap  
 
             NUM_BONES : NumberOfBones
+            
+            USE_WIND : UseWind
         }
     }
 
     Technique PreShadow {
 
-        VertexShader GLSL100 :   MatDefs/IndexedBillboardPreShadow.vert
+        VertexShader GLSL110 :   MatDefs/IndexedBillboardPreShadow.vert
         FragmentShader GLSL100 : Common/MatDefs/Shadow/PreShadow.frag
 
         WorldParameters {
@@ -195,12 +202,14 @@ MaterialDef Phong Lighting {
             CameraPosition
             WorldMatrix
             ViewProjectionMatrix
+            ViewMatrix
         }
 
         Defines {
             COLOR_MAP : ColorMap
             DISCARD_ALPHA : AlphaDiscardThreshold
             NUM_BONES : NumberOfBones
+            USE_WIND : UseWind
         }
 
         ForcedRenderState {

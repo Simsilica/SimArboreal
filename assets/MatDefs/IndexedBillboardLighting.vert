@@ -40,6 +40,12 @@ attribute float inSize;
 varying vec3 lightVec;
 //varying vec4 spotVec;
 
+#ifdef USE_WIND
+  uniform float g_Time; 
+#endif
+
+#import "MatDefs/TreeWind.glsllib"
+
 #ifdef VERTEX_COLOR
   attribute vec4 inColor;
 #endif
@@ -174,12 +180,29 @@ void main(){
     #ifndef SCREENSPACE
         // The default way   
         vec4 wPosition = g_WorldMatrix * modelSpacePos;
+        
+        // Note: these don't really work in a batch but so far it also
+        //       hasn't been a big issue.
         vec4 groundPosition = g_WorldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
         vec3 wNormal = (g_WorldMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz; 
         vec3 dir = normalize(wPosition.xyz - g_CameraPosition);
     
         vec3 offset = normalize(cross(dir, wNormal));
         wPosition.xyz += offset * inSize;
+ 
+        #ifdef USE_WIND
+            // Calculate the wind from the unprojected position so that
+            // the whole leaf quad gets the same wind
+            float windStrength = 0.75;
+            
+            // For proper noise we'll need the real x,z ground position
+            // which even batched we can extract from inPosition
+            vec4 flatGroundPosition = g_WorldMatrix * modelSpacePos;
+            
+            vec3 localPos = vec3(inSize, abs(inSize) * texCoord.y * 2.0, 0.0);
+            vec3 wind = calculateImpostorWind(flatGroundPosition.xyz, localPos, windStrength);
+            wPosition.xyz += wind; 
+        #endif    
     
         vec3 wvPosition = (g_ViewMatrix * wPosition).xyz; 
     
