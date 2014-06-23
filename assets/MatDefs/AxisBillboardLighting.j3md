@@ -138,6 +138,19 @@ MaterialDef Phong Lighting {
         Float FlexHeight : 2.0
         Float TrunkFlexibility : 1.0
         Float BranchFlexibility : 1.0
+        
+        // Ground scattering parameters
+        Boolean UseScattering       
+        Vector3 SunPosition
+        Float Exposure        
+        Float KmESun
+        Float InnerRadius        
+        Float RadiusScale
+        Float PlanetScale : 1        
+        Vector3 InvWavelengthsKrESun        
+        Float AverageDensityScale
+        Float InvAverageDensityHeight;
+        Vector3 KWavelengths4PI;        
     }
 
     Technique {
@@ -145,7 +158,7 @@ MaterialDef Phong Lighting {
         LightMode MultiPass
 
         VertexShader GLSL110:   MatDefs/AxisBillboardLighting.vert
-        FragmentShader GLSL110: Common/MatDefs/Light/Lighting.frag
+        FragmentShader GLSL110: MatDefs/ScatteredLighting.frag
 
         WorldParameters {
             WorldViewProjectionMatrix
@@ -188,6 +201,7 @@ MaterialDef Phong Lighting {
             NUM_BONES : NumberOfBones
             
             USE_WIND : UseWind
+            USE_SCATTERING : UseScattering
         }
     }
 

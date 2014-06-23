@@ -2,6 +2,7 @@
 //#define HQ_ATTENUATION
 
 #import "Common/ShaderLib/Skinning.glsllib"
+#import "MatDefs/VertScattering.glsllib"
 
 uniform mat4 g_WorldViewProjectionMatrix;
 uniform mat4 g_ViewProjectionMatrix;
@@ -9,6 +10,7 @@ uniform mat4 g_WorldViewMatrix;
 uniform mat3 g_NormalMatrix;
 uniform mat4 g_ViewMatrix;
 uniform mat4 g_WorldMatrix;
+uniform vec3 g_CameraPosition;
 
 uniform vec4 m_Ambient;
 uniform vec4 m_Diffuse;
@@ -176,9 +178,18 @@ void main(){
     
     wPos.xyz += calculateWind(groundPos.xyz, wPos.xyz - groundPos.xyz, windStrength);
  
+    #ifdef USE_SCATTERING
+        calculateVertexGroundScattering(wPos.xyz, g_CameraPosition);
+    #endif
+ 
     vec3 wvPosition = (g_ViewMatrix * wPos).xyz;
     gl_Position = g_ViewProjectionMatrix * wPos;
    #else
+        #ifdef USE_SCATTERING
+            vec4 wPos = g_WorldMatrix * modelSpacePos;
+            calculateVertexGroundScattering(wPos.xyz, g_CameraPosition);
+        #endif
+   
     gl_Position = g_WorldViewProjectionMatrix * modelSpacePos;
     vec3 wvPosition = (g_WorldViewMatrix * modelSpacePos).xyz;
    #endif

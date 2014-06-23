@@ -3,6 +3,8 @@
 
 #import "Common/ShaderLib/Skinning.glsllib"
 
+#import "MatDefs/VertScattering.glsllib"
+
 uniform mat4 g_WorldViewProjectionMatrix;
 uniform mat4 g_WorldViewMatrix;
 uniform mat4 g_WorldMatrix;
@@ -214,6 +216,10 @@ void main(){
 
         // Push it a little towards the camera (should maybe be a parameter)
         wPosition.xyz += billboardNormal * 0.5;
+
+        #ifdef USE_SCATTERING
+            calculateVertexGroundScattering(wPosition.xyz, g_CameraPosition);
+        #endif
 
         // Calculate the world view position
         vec3 wvPosition = (g_ViewMatrix * wPosition).xyz; 
