@@ -1,3 +1,8 @@
+Revision ???
+--------------
+-Added scattering support to all of the tree-related materials.
+    Note: now SimArboreal trees require the SimFX asset jar: simfx-assets.jar
+
 
 Revision 141
 -------------
