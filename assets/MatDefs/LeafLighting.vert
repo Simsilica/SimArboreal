@@ -40,6 +40,9 @@ attribute float inSize;
 varying vec3 lightVec;
 //varying vec4 spotVec;
 
+// Used for the alpha darkening 
+varying float vDistance;
+
 #ifdef USE_WIND
   uniform float g_Time; 
 #endif
@@ -184,6 +187,8 @@ void main(){
         vec3 wvPosition = (g_WorldViewMatrix * modelSpacePos).xyz;
         wvPosition.x += (corner.x - 0.5) * inSize;
         wvPosition.y += (corner.y - 0.5) * inSize;
+ 
+        vDistance = length(wvPosition);
     
         gl_Position = g_ProjectionMatrix * vec4(wvPosition, 1.0);
 
@@ -204,7 +209,9 @@ void main(){
         #endif
 
         // Calculate the screen parallel axis vectors
-        vec3 dir = normalize(wPosition.xyz - g_CameraPosition);
+        vec3 cameraOffset = wPosition.xyz - g_CameraPosition;
+        vDistance = length(cameraOffset);        
+        vec3 dir = cameraOffset/vDistance; //normalize(wPosition.xyz - g_CameraPosition);
         vec3 left = normalize(cross(dir, vec3(0.0, 1.0, 0.0)));
         vec3 up = normalize(cross(left, dir)); 
         vec3 billboardNormal = normalize(cross(left, up)); 
