@@ -2,6 +2,9 @@ Revision ???
 --------------
 -Added scattering support to all of the tree-related materials.
     Note: now SimArboreal trees require the SimFX asset jar: simfx-assets.jar
+-Added a distance based alpha-fill to the leaf material.  Needs some tweaking
+    but it helps round out transitions between near/far and keeps alpha
+    halos from appearing as badly when up close.    
 
 
 Revision 141
