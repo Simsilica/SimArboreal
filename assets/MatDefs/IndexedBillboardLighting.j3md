@@ -133,6 +133,7 @@ MaterialDef Phong Lighting {
         Matrix4Array BoneMatrices
         
         // For wind
+        Vector3 WorldNoiseOffset
         Texture2D WindNoise
         Boolean UseWind        
         Float TrunkFlexibility : 1.0

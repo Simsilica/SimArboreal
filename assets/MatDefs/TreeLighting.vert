@@ -4,13 +4,16 @@
 #import "Common/ShaderLib/Skinning.glsllib"
 #import "MatDefs/VertScattering.glsllib"
 
-uniform mat4 g_WorldViewProjectionMatrix;
+//uniform mat4 g_WorldViewProjectionMatrix;
 uniform mat4 g_ViewProjectionMatrix;
 uniform mat4 g_WorldViewMatrix;
 uniform mat3 g_NormalMatrix;
 uniform mat4 g_ViewMatrix;
 uniform mat4 g_WorldMatrix;
 uniform vec3 g_CameraPosition;
+
+#import "MatDefs/TreeInstancing.glsllib"
+
 
 uniform vec4 m_Ambient;
 uniform vec4 m_Diffuse;
@@ -171,10 +174,10 @@ void main(){
     // Need to know the model's ground position for noise basis
     // otherwise the tree will warp all over the place and it
     // will look strange as the trunk stretches and shrinks.
-    vec4 groundPos = g_WorldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+    vec4 groundPos = worldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
     
     // Wind is applied to world space   
-    vec4 wPos = g_WorldMatrix * modelSpacePos;
+    vec4 wPos = worldMatrix * modelSpacePos;
     
     wPos.xyz += calculateWind(groundPos.xyz, wPos.xyz - groundPos.xyz, windStrength);
  
@@ -185,17 +188,18 @@ void main(){
     vec3 wvPosition = (g_ViewMatrix * wPos).xyz;
     gl_Position = g_ViewProjectionMatrix * wPos;
    #else
+    vec4 wPos = worldMatrix * modelSpacePos;
         #ifdef USE_SCATTERING
-            vec4 wPos = g_WorldMatrix * modelSpacePos;
             calculateVertexGroundScattering(wPos.xyz, g_CameraPosition);
         #endif
    
-    gl_Position = g_WorldViewProjectionMatrix * modelSpacePos;
-    vec3 wvPosition = (g_WorldViewMatrix * modelSpacePos).xyz;
+    gl_Position = g_ViewProjectionMatrix * wPos;
+    vec3 wvPosition = (g_ViewMatrix * wPos).xyz;
    #endif
    
    vec3 viewDir = normalize(-wvPosition);
-   vec3 wvNormal  = normalize(g_NormalMatrix * modelSpaceNorm);
+   //vec3 wvNormal  = normalize(g_NormalMatrix * modelSpaceNorm);
+   vec3 wvNormal  = normalize(TransformNormal(modelSpaceNorm));
   
        //vec4 lightColor = g_LightColor[gl_InstanceID];
        //vec4 lightPos   = g_LightPosition[gl_InstanceID];
@@ -207,7 +211,8 @@ void main(){
    vec4 lightColor = g_LightColor;
 
    #if defined(NORMALMAP) && !defined(VERTEX_LIGHTING)
-     vec3 wvTangent = normalize(g_NormalMatrix * modelSpaceTan);
+     //vec3 wvTangent = normalize(g_NormalMatrix * modelSpaceTan);
+     vec3 wvTangent = normalize(TransformNormal(modelSpaceTan));
      vec3 wvBinormal = cross(wvNormal, wvTangent);
 
      mat3 tbnMat = mat3(wvTangent, wvBinormal * -inTangent.w,wvNormal);
@@ -226,7 +231,8 @@ void main(){
      lightComputeDir(wvPosition, lightColor, wvLightPos, vLightDir);
 
      #ifdef V_TANGENT
-        vNormal = normalize(g_NormalMatrix * inTangent.xyz);
+        //vNormal = normalize(g_NormalMatrix * inTangent.xyz);
+        vNormal = normalize(TransformNormal(inTangent.xyz));
         vNormal = -cross(cross(vLightDir.xyz, vNormal), vNormal);
      #endif
    #endif

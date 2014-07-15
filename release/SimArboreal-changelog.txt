@@ -4,7 +4,12 @@ Revision ???
     Note: now SimArboreal trees require the SimFX asset jar: simfx-assets.jar
 -Added a distance based alpha-fill to the leaf material.  Needs some tweaking
     but it helps round out transitions between near/far and keeps alpha
-    halos from appearing as badly when up close.    
+    halos from appearing as badly when up close.  Actually, commented this
+    out because it's still worse than none at all... but it's there for later
+    exploration.
+-Added some instancing support that can be used if the latest JME (with instancing)
+    is used.  The InstanceData buffer must have geometry-local transformations
+    in it.    
 
 
 Revision 141

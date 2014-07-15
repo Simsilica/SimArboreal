@@ -178,7 +178,7 @@ void main(){
     #endif
 
     // Do some distance based darkening of the color under alpha 
-    float distanceFalloff = 32.0;
+/*    float distanceFalloff = 32.0;
     float mid = distanceFalloff * 0.75;
     float colorMix = clamp((distanceFalloff - vDistance) / mid, 0.5, 1.0);
      
@@ -186,7 +186,7 @@ void main(){
         //diffuseColor = mix(vec4(1.0, 0.0, 0.0, 1.0), diffuseColor, colorMix * alpha);
         diffuseColor = mix(vec4(0.2, 0.25, 0.05, 1.0), diffuseColor, colorMix);
     }
-    alpha = alpha * colorMix * 2.0; 
+    alpha = alpha * colorMix * 2.0;*/ 
 
     if(alpha < m_AlphaDiscardThreshold){
         discard;

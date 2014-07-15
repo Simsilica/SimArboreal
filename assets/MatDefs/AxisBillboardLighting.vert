@@ -13,6 +13,8 @@ uniform mat4 g_ViewProjectionMatrix;
 uniform mat4 g_WorldMatrix;
 uniform vec3 g_CameraPosition;
 
+#import "MatDefs/TreeInstancing.glsllib"
+
 uniform vec4 m_Ambient;
 uniform vec4 m_Diffuse;
 uniform vec4 m_Specular;
@@ -179,8 +181,8 @@ void main(){
     
     #ifndef SCREENSPACE
         // The default way   
-        vec4 wPosition = g_WorldMatrix * modelSpacePos;
-        vec3 wNormal = (g_WorldMatrix * vec4(modelSpaceNorm, 0.0)).xyz; 
+        vec4 wPosition = worldMatrix * modelSpacePos;
+        vec3 wNormal = (worldMatrix * vec4(modelSpaceNorm, 0.0)).xyz; 
         vec3 dir = normalize(wPosition.xyz - g_CameraPosition);
 
         #ifdef USE_WIND
@@ -189,7 +191,7 @@ void main(){
             // Need to know the model's ground position for noise basis
             // otherwise the tree will warp all over the place and it
             // will look strange as the trunk stretches and shrinks.            
-            vec4 groundPos = g_WorldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+            vec4 groundPos = worldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
     
             wPosition.xyz += calculateWind(groundPos.xyz, wPosition.xyz - groundPos.xyz, windStrength);
         #endif 
@@ -213,7 +215,7 @@ void main(){
         // as the camera turns    
         vec3 wvPosition = (g_WorldViewMatrix * modelSpacePos).xyz;
         //vec3 wvNormal  = normalize(g_NormalMatrix * modelSpaceNorm);
-        vec3 wvNormal = g_NormalMatrix * modelSpaceNorm;
+        vec3 wvNormal = TransformNormal(modelSpaceNorm);
         
         vec3 offset = normalize(vec3(wvNormal.y, -wvNormal.x, 0.0));
         wvPosition += offset * inSize;
@@ -244,7 +246,7 @@ void main(){
    vec4 lightColor = g_LightColor;
 
    #if defined(NORMALMAP) && !defined(VERTEX_LIGHTING)
-     vec3 wvTangent = normalize(g_NormalMatrix * modelSpaceTan);
+     vec3 wvTangent = normalize(TransformNormal(modelSpaceTan));
      vec3 wvBinormal = cross(wvNormal, wvTangent);
 
      mat3 tbnMat = mat3(wvTangent, wvBinormal * -inTangent.w,wvNormal);
@@ -263,7 +265,7 @@ void main(){
      lightComputeDir(wvPosition, lightColor, wvLightPos, vLightDir);
 
      #ifdef V_TANGENT
-        vNormal = normalize(g_NormalMatrix * inTangent.xyz);
+        vNormal = normalize(TransformNormal(inTangent.xyz));
         vNormal = -cross(cross(vLightDir.xyz, vNormal), vNormal);
      #endif     
    #endif

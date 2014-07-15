@@ -13,6 +13,8 @@ uniform mat4 g_ViewMatrix;
 uniform mat4 g_ViewProjectionMatrix;
 uniform vec3 g_CameraPosition;
 
+#import "MatDefs/TreeInstancing.glsllib"
+
 uniform vec4 m_Ambient;
 uniform vec4 m_Diffuse;
 uniform vec4 m_Specular;
@@ -197,12 +199,12 @@ void main(){
 
         // Get the world position (not world view) because
         // billboarding will be done in world space
-        vec4 wPosition = g_WorldMatrix * modelSpacePos; 
+        vec4 wPosition = worldMatrix * modelSpacePos; 
 
         #ifdef USE_WIND
             // Calculate the wind from the unprojected position so that
             // the whole leaf quad gets the same wind
-            vec4 groundPos = g_WorldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+            vec4 groundPos = worldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
             float windStrength = 0.75;
             vec3 wind = calculateWind(groundPos.xyz, wPosition.xyz - groundPos.xyz, windStrength);
             wPosition.xyz += wind;
@@ -238,7 +240,7 @@ void main(){
         // current direction.
         // Normal is calculated by mixing the real world-normal for the 
         // surface with the splayed normal.
-        vec3 wNormal = (g_WorldMatrix * vec4(modelSpaceNorm, 0.0)).xyz * 0.1; 
+        vec3 wNormal = (worldMatrix * vec4(modelSpaceNorm, 0.0)).xyz * 0.1; 
         wNormal += left * (corner.x - 0.5);        
         wNormal += up * (corner.y - 0.5);
         wNormal += billboardNormal * 0.5;
@@ -269,7 +271,7 @@ void main(){
    vec4 lightColor = g_LightColor;
 
    #if defined(NORMALMAP) && !defined(VERTEX_LIGHTING)
-     vec3 wvTangent = normalize(g_NormalMatrix * modelSpaceTan);
+     vec3 wvTangent = normalize(TransformNormal(modelSpaceTan));
      vec3 wvBinormal = cross(wvNormal, wvTangent);
 
      mat3 tbnMat = mat3(wvTangent, wvBinormal * -inTangent.w,wvNormal);
@@ -288,7 +290,7 @@ void main(){
      lightComputeDir(wvPosition, lightColor, wvLightPos, vLightDir);
 
      #ifdef V_TANGENT
-        vNormal = normalize(g_NormalMatrix * inTangent.xyz);
+        vNormal = normalize(TransformNormal(inTangent.xyz));
         vNormal = -cross(cross(vLightDir.xyz, vNormal), vNormal);
      #endif
    #endif

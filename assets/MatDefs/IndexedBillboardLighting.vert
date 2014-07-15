@@ -298,7 +298,11 @@ void main(){
 
      // *** we have no inTangent
      // mat3 tbnMat = mat3(wvTangent, wvBinormal * -inTangent.w,wvNormal);
-     mat3 tbnMat = mat3(wvTangent, wvBinormal * 1.0, -wvNormal);
+     
+     // For 3.0 stable... use this
+     //mat3 tbnMat = mat3(wvTangent, wvBinormal * -1.0, -wvNormal);
+     // For head... use this
+     mat3 tbnMat = mat3(wvTangent, wvBinormal * -1.0, -wvNormal);
      
      //vPosition = wvPosition * tbnMat;
      vViewDir  = viewDir * tbnMat;

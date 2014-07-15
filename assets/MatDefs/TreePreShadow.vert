@@ -6,6 +6,10 @@ uniform mat4 g_WorldViewProjectionMatrix;
 uniform mat4 g_WorldViewMatrix;
 uniform mat4 g_ViewProjectionMatrix;
 uniform mat4 g_WorldMatrix;
+uniform mat4 g_ViewMatrix;
+uniform mat3 g_NormalMatrix;
+
+#import "MatDefs/TreeInstancing.glsllib"
 
 varying vec2 texCoord;
 
@@ -29,10 +33,10 @@ void main(){
         // Need to know the model's ground position for noise basis
         // otherwise the tree will warp all over the place and it
         // will look strange as the trunk stretches and shrinks.
-        vec4 groundPos = g_WorldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+        vec4 groundPos = worldMatrix * vec4(0.0, 0.0, 0.0, 1.0);
     
         // Wind is applied to world space   
-        vec4 wPos = g_WorldMatrix * modelSpacePos;
+        vec4 wPos = worldMatrix * modelSpacePos;
     
         // Note: if the model position we pass in is not rotated
         // then the radial turbulence is technically not correct.
@@ -42,8 +46,8 @@ void main(){
         wPos.xyz += calculateWind(groundPos.xyz, inPosition, windStrength);
  
         gl_Position = g_ViewProjectionMatrix * wPos;
-    #else
-        gl_Position = g_WorldViewProjectionMatrix * modelSpacePos;
+    #else        
+        gl_Position = g_ViewProjectionMatrix * (worldMatrix * modelSpacePos);
     #endif
    
     texCoord = inTexCoord;

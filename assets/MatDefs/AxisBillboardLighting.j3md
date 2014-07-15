@@ -133,6 +133,7 @@ MaterialDef Phong Lighting {
         Matrix4Array BoneMatrices
         
         // For wind
+        Vector3 WorldNoiseOffset
         Texture2D WindNoise
         Boolean UseWind        
         Float FlexHeight : 2.0
@@ -150,7 +151,10 @@ MaterialDef Phong Lighting {
         Vector3 InvWavelengthsKrESun        
         Float AverageDensityScale
         Float InvAverageDensityHeight;
-        Vector3 KWavelengths4PI;        
+        Vector3 KWavelengths4PI;
+                
+        // For instancing
+        Boolean UseInstancing
     }
 
     Technique {
@@ -202,6 +206,9 @@ MaterialDef Phong Lighting {
             
             USE_WIND : UseWind
             USE_SCATTERING : UseScattering
+            
+            // For instancing
+            USE_INSTANCING : UseInstancing
         }
     }
 
@@ -226,6 +233,9 @@ MaterialDef Phong Lighting {
             NUM_BONES : NumberOfBones
                         
             USE_WIND : UseWind
+            
+            // For instancing
+            USE_INSTANCING : UseInstancing
         }
 
         ForcedRenderState {
